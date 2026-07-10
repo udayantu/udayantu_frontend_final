@@ -325,20 +325,22 @@ export default function AdminDashboard() {
               />
             </div>
             <div className="space-y-0.5">
-              <p className="text-sm font-bold text-[#1E3A63] leading-tight truncate max-w-[110px]" title={rbacUser?.fullName || "Pradeep K. C."}>
-                {rbacUser?.fullName || "Pradeep K. C."}
+              <p className="text-sm font-bold text-[#1E3A63] leading-tight truncate max-w-[110px]" title="Pradeep">
+                Pradeep
               </p>
               <p className="text-xs text-slate-500 font-medium truncate max-w-[110px]">
-                {rbacUser ? getRoleLabel(rbacUser.role) : "Super Admin"}
+                Owner
               </p>
             </div>
           </div>
           <LogOut 
             className="w-4 h-4 text-slate-400 hover:text-red-500 cursor-pointer transition-colors" 
             onClick={() => {
-              sessionStorage.removeItem("udayantu_admin_session");
-              setIsSecureAdminLoggedIn(false);
-              toast({ title: "Logged Out", description: "Secure admin session terminated." });
+              if (confirm("Are you sure you want to log out from the Admin Portal?")) {
+                sessionStorage.removeItem("udayantu_admin_session");
+                setIsSecureAdminLoggedIn(false);
+                toast({ title: "Logged Out", description: "Secure admin session terminated." });
+              }
             }}
           />
         </div>
