@@ -145,7 +145,9 @@ const EmployerLogin = () => {
       setIsLoading(false);
 
       if (result.success) {
-        setDemoOTP(result.otp);
+        if (isDemoMode()) {
+          setDemoOTP(result.otp);
+        }
         setStep("otp");
       } else {
         setError("Failed to send OTP");
