@@ -33,7 +33,7 @@ const EMPLOYER_SESSION_KEY = "udayantu_employer_session_demo";
 const OTP_EXPIRY_MINUTES = 10;
 
 // Check if we're in demo mode (development only)
-const isDemoMode = (): boolean => {
+export const isDemoMode = (): boolean => {
   // Demo mode is only allowed in development
   const isLocalhost = typeof window !== 'undefined' && 
     (window.location.hostname === 'localhost' || 
@@ -79,11 +79,21 @@ export async function sendOTPViaEmail(email: string): Promise<string> {
         });
     }
 
-    const { error: welcomeError } = await supabase.functions.invoke("send-employer-welcome", {
-      body: { email, otp }
+    const welcomeResponse = await fetch("/api/send-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type: "otp",
+        email,
+        otp,
+      }),
     });
 
-    if (welcomeError) throw welcomeError;
+    if (!welcomeResponse.ok) {
+      throw new Error("Failed to send OTP via Vercel endpoint");
+    }
   } catch (dbError) {
     console.warn("Supabase auth offline/tables not ready, falling back to local simulation.", dbError);
     const otpData = {

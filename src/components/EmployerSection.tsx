@@ -95,15 +95,19 @@ export const EmployerSection = () => {
       });
 
       // Trigger welcome email (non-blocking)
-      supabase.functions.invoke("send-employer-welcome", {
-        body: {
+      fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           name: data.contactPerson,
           email: data.email,
           company: data.orgName
-        }
+        })
       }).catch((error) => {
         // Log silently - don't fail form submission
-        console.log("Email notification pending domain verification");
+        console.log("Email notification error:", error);
       });
 
       // Store submitted data and show success screen

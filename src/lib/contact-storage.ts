@@ -92,9 +92,13 @@ export async function submitContact(
 
     if (dbError) throw dbError;
 
-    // 2. Trigger admin email notification via send-employer-welcome Edge Function
-    supabase.functions.invoke("send-employer-welcome", {
-      body: {
+    // 2. Trigger admin email notification via Vercel send-email API
+    fetch("/api/send-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         type: "contact",
         name: submission.full_name,
         email: submission.email,
@@ -102,9 +106,9 @@ export async function submitContact(
         role: submission.role,
         city: submission.city || "N/A",
         message: submission.note || "No message provided."
-      }
+      })
     }).catch(mailErr => {
-      console.warn("BCC admin notification pending edge function release", mailErr);
+      console.warn("Admin notification email trigger error:", mailErr);
     });
 
     return dbData as ContactSubmission;
