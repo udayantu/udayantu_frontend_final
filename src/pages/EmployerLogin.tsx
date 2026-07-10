@@ -75,9 +75,13 @@ const EmployerLogin = () => {
     if (companyName.trim()) {
       const adminExists = hasAdminForCompany(companyName);
       setHasExistingAdmin(adminExists);
-      // Reset role if admin exists
-      if (adminExists && role === "admin") {
-        setRole("recruiter");
+      // Automatically assign admin role if no admin exists for the company
+      if (adminExists) {
+        if (role === "admin") {
+          setRole("recruiter");
+        }
+      } else {
+        setRole("admin");
       }
     }
   }, [companyName, role]);
@@ -189,55 +193,11 @@ const EmployerLogin = () => {
     }
   };
 
-  // Don't render if not in demo mode
-  if (!isDemoMode()) {
-    return (
-      <>
-        <Navbar />
-        <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background py-12 px-4">
-          <div className="max-w-md mx-auto text-center">
-            <Card className="p-8">
-              <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-              <h1 className="text-xl font-bold text-foreground mb-2">Employer Portal Coming Soon</h1>
-              <p className="text-muted-foreground mb-4">
-                The employer portal is currently under development. Please contact us for employer inquiries.
-              </p>
-              <Button onClick={() => navigate("/employers")} variant="outline">
-                Back to Employers Page
-              </Button>
-            </Card>
-          </div>
-        </div>
-        <Footer />
-      </>
-    );
-  }
-
   return (
     <>
       <Navbar />
       <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background py-12 px-4">
         <div className="max-w-md mx-auto">
-          {/* Demo Warning Banner */}
-          {showDemoWarning && (
-            <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">Demo Mode</p>
-                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                    This is a UI preview. Data is stored temporarily in your browser session and will be cleared when you close the tab.
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setShowDemoWarning(false)}
-                  className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 text-xs"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          )}
           
           {/* Header */}
           <div className="text-center mb-8">
@@ -248,21 +208,6 @@ const EmployerLogin = () => {
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-primary mb-2">{t.title}</h1>
             <p className="text-sm md:text-base text-muted-foreground">{t.subtitle}</p>
-          </div>
-
-          {/* Controls */}
-          <div className="flex flex-wrap gap-2 justify-center mb-6">
-            <button
-              onClick={() => setIsLiteMode(!isLiteMode)}
-              className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                isLiteMode
-                  ? "bg-secondary text-secondary-foreground"
-                  : "border border-border hover:bg-muted"
-              }`}
-              data-testid="button-lite-mode"
-            >
-              {t.liteMode}
-            </button>
           </div>
 
           {/* Login Form */}
@@ -303,20 +248,7 @@ const EmployerLogin = () => {
                 </div>
 
                 {/* Role Selection */}
-                {!hasExistingAdmin ? (
-                  <div className="p-4 bg-secondary/10 border border-secondary/30 rounded-lg">
-                    <div className="flex gap-3 mb-3">
-                      <CheckCircle2 className="w-5 h-5 text-secondary flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">First User (Admin)</p>
-                        <p className="text-xs text-muted-foreground">Your account will be set as Admin - manage team and permissions</p>
-                      </div>
-                    </div>
-                    <Button disabled variant="outline" className="w-full text-xs" data-testid="button-admin-confirmed">
-                      {t.admin} (Confirmed)
-                    </Button>
-                  </div>
-                ) : (
+                {hasExistingAdmin && (
                   <div>
                     <Label className="text-sm font-medium text-foreground mb-2 block">{t.role}</Label>
                     <Tabs value={role} onValueChange={(val) => setRole(val as EmployerRole)}>
