@@ -82,7 +82,7 @@ export const HowItWorksSection = memo(() => {
       {/* Decorative elements */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--primary)/0.08),transparent)] pointer-events-none" />
       
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto max-w-[1400px] px-4 relative z-10">
         <div className="text-center mb-12 md:mb-16">
           <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-foreground">
             How It <span className="text-primary">Works</span>
@@ -92,7 +92,7 @@ export const HowItWorksSection = memo(() => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 relative">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5 lg:gap-4 xl:gap-5 relative">
           {/* Connection lines for desktop */}
           <div className="hidden lg:block absolute top-20 left-[12%] right-[12%] h-[2px] bg-gradient-to-r from-primary/10 via-primary/45 to-primary/10 -z-10" />
           
