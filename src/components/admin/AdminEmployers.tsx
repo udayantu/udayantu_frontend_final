@@ -284,28 +284,23 @@ export function AdminEmployers() {
       setFilteredEmployers(results.slice(from, to + 1));
 
       // Calculate dynamic stats
-      const totalEmp = results.length || MOCK_EMPLOYERS.length;
+      const totalEmp = results.length;
       const activeEmp = results.filter(e => e.status === "Active").length;
       const newThisWeekCount = results.filter(e => new Date(e.created_at) >= weekAgo).length;
       const totalOpenings = results.reduce((acc, e) => acc + (parseInt(String(e.openings_count)) || 0), 0);
 
       setStats({
-        total: totalEmp || 142,
-        active: activeEmp || 48,
-        newThisWeek: newThisWeekCount || 6,
-        openPositions: totalOpenings || 237,
-        placementsThisMonth: Math.round(totalOpenings * 0.15) || 34
+        total: totalEmp,
+        active: activeEmp,
+        newThisWeek: newThisWeekCount,
+        openPositions: totalOpenings,
+        placementsThisMonth: Math.round(totalOpenings * 0.15)
       });
 
     } catch (e) {
-      // Local Storage fallback
+      console.warn("Could not query employers from database. Initializing clean/empty state.");
       const stored = localStorage.getItem("udayantu_employers");
       let allEmployers = stored ? JSON.parse(stored) as Employer[] : [];
-      if (allEmployers.length === 0) {
-        allEmployers = MOCK_EMPLOYERS;
-        localStorage.setItem("udayantu_employers", JSON.stringify(MOCK_EMPLOYERS));
-      }
-
       let results = allEmployers.map(parseEmployerNotes);
 
       if (searchTerm) {

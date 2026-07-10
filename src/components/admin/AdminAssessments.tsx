@@ -122,60 +122,48 @@ export function AdminAssessments() {
         .order("completed_at", { ascending: false })
         .limit(50);
 
-      if (assessError || !assessmentsData || assessmentsData.length === 0) throw new Error("No database records found");
+      if (assessError) throw assessError;
 
       const studentIds = [...new Set(assessmentsData?.map(a => a.student_id) || [])];
-      const { data: studentsData } = await supabase
-        .from("student_registrations")
-        .select("user_id, full_name, email")
-        .in("user_id", studentIds);
+      let enrichedAssessments: any[] = [];
+      let failed: any[] = [];
 
-      const enrichedAssessments = assessmentsData?.map(assessment => {
-        const student = studentsData?.find(s => s.user_id === assessment.student_id);
-        return {
-          ...assessment,
-          full_name: student?.full_name || 'Unknown',
-          email: student?.email || 'Unknown',
-        };
-      });
+      if (studentIds.length > 0) {
+        const { data: studentsData } = await supabase
+          .from("student_registrations")
+          .select("user_id, full_name, email")
+          .in("user_id", studentIds);
 
-      const failed = enrichedAssessments
-        ?.filter(a => a.score !== null && a.score < 70)
-        .map(a => ({
-          student_id: a.student_id,
-          full_name: a.full_name,
-          email: a.email,
-          score: a.score as number,
-          assessment_type: a.type,
-          last_completed_at: a.completed_at,
-        }))
-        .filter((a, idx, arr) => arr.findIndex(x => x.student_id === a.student_id && x.assessment_type === a.assessment_type) === idx) || [];
+        enrichedAssessments = (assessmentsData || []).map(assessment => {
+          const student = studentsData?.find(s => s.user_id === assessment.student_id);
+          return {
+            ...assessment,
+            full_name: student?.full_name || 'Unknown',
+            email: student?.email || 'Unknown',
+          };
+        });
 
-      setAssessments(enrichedAssessments || []);
-      setFailedStudents(failed);
-    } catch (error: unknown) {
-      // Local Storage Fallback
-      const stored = localStorage.getItem("udayantu_assessments");
-      let allAssessments = stored ? JSON.parse(stored) as Assessment[] : [];
-      if (allAssessments.length === 0) {
-        allAssessments = MOCK_ASSESSMENTS;
-        localStorage.setItem("udayantu_assessments", JSON.stringify(MOCK_ASSESSMENTS));
+        failed = enrichedAssessments
+          ?.filter(a => a.score !== null && a.score < 70)
+          .map(a => ({
+            student_id: a.student_id,
+            full_name: a.full_name,
+            email: a.email,
+            score: a.score as number,
+            assessment_type: a.type,
+            last_completed_at: a.completed_at,
+          }))
+          .filter((a, idx, arr) => arr.findIndex(x => x.student_id === a.student_id && x.assessment_type === a.assessment_type) === idx) || [];
       }
 
-      const failed = allAssessments
-        .filter(a => a.score !== null && a.score < 70)
-        .map(a => ({
-          student_id: a.student_id,
-          full_name: a.full_name || 'Unknown',
-          email: a.email || 'Unknown',
-          score: a.score as number,
-          assessment_type: a.type,
-          last_completed_at: a.completed_at,
-        }))
-        .filter((a, idx, arr) => arr.findIndex(x => x.student_id === a.student_id && x.assessment_type === a.assessment_type) === idx);
-
-      setAssessments(allAssessments);
+      setAssessments(enrichedAssessments);
       setFailedStudents(failed);
+    } catch (error: unknown) {
+      console.warn("Could not query assessments from live database. Initializing clean/empty state.");
+      const stored = localStorage.getItem("udayantu_assessments");
+      let allAssessments = stored ? JSON.parse(stored) : [];
+      setAssessments(allAssessments);
+      setFailedStudents([]);
     } finally {
       setLoading(false);
     }

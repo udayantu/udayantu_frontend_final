@@ -150,13 +150,12 @@ export function AdminCourses() {
       }));
       setCourses(mappedCourses);
     } catch (error: unknown) {
-      // Local Storage Fallback
+      console.warn("Could not query courses from database. Initializing clean/empty state.");
       const stored = localStorage.getItem("udayantu_courses");
       if (stored) {
         setCourses(JSON.parse(stored));
       } else {
-        localStorage.setItem("udayantu_courses", JSON.stringify(MOCK_COURSES));
-        setCourses(MOCK_COURSES);
+        setCourses([]);
       }
     } finally {
       setLoading(false);
@@ -198,7 +197,7 @@ export function AdminCourses() {
     } catch (error: unknown) {
       // Local Storage Fallback mutation
       const stored = localStorage.getItem("udayantu_courses");
-      let allCourses = stored ? JSON.parse(stored) as Course[] : [...MOCK_COURSES];
+      let allCourses = stored ? JSON.parse(stored) as Course[] : [];
 
       if (editingCourse) {
         allCourses = allCourses.map((c) =>

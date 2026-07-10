@@ -98,7 +98,7 @@ export function AdminPayments() {
 
       const { data, error, count } = await query.range(from, to);
 
-      if (error || !data || data.length === 0) throw new Error("No database payments found");
+      if (error) throw error;
       setPayments(data || []);
       setFilteredPayments(data || []);
       setTotalCount(count || 0);
@@ -114,13 +114,9 @@ export function AdminPayments() {
         revenue: revenue / 100,
       });
     } catch (error: unknown) {
-      // Local Storage Fallback
+      console.warn("Could not load payments from live database. Initializing clean/empty state.");
       const stored = localStorage.getItem("udayantu_payments");
       let allPayments = stored ? JSON.parse(stored) as Payment[] : [];
-      if (allPayments.length === 0) {
-        allPayments = MOCK_PAYMENTS;
-        localStorage.setItem("udayantu_payments", JSON.stringify(MOCK_PAYMENTS));
-      }
 
       let results = [...allPayments];
 
