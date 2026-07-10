@@ -33,12 +33,11 @@ export function useEmployerAuth() {
       } else {
         otp = await sendOTPViaWhatsApp(emailOrPhone);
       }
-      // Return both success and OTP for demo purposes
       return { success: true, otp };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to send OTP";
       setError(message);
-      return { success: false, otp: "" };
+      return { success: false, otp: "", error: message };
     }
   };
 

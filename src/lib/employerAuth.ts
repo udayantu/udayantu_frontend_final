@@ -54,30 +54,27 @@ export async function sendOTPViaEmail(email: string): Promise<string> {
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
 
   try {
-    const { data: existing } = await supabase
+    const { data: existing, error } = await supabase
       .from("employers")
-      .select("id")
+      .select("id, status")
       .eq("email", email)
       .maybeSingle();
 
-    if (existing) {
-      await supabase
-        .from("employers")
-        .update({ otp_code: otp, otp_expires_at: expiresAt })
-        .eq("email", email);
-    } else {
-      await supabase
-        .from("employers")
-        .insert({
-          email,
-          company_name: "Pending Verification",
-          contact_name: "Employer",
-          phone: "",
-          otp_code: otp,
-          otp_expires_at: expiresAt,
-          status: "Pending"
-        });
+    if (error || !existing) {
+      throw new Error("Your email is not registered with us.");
     }
+
+    if (existing.status !== "Active") {
+      throw new Error("Your employer account is pending activation. Please contact support.");
+    }
+
+    // Email is registered and active! Store OTP.
+    const { error: updateError } = await supabase
+      .from("employers")
+      .update({ otp_code: otp, otp_expires_at: expiresAt })
+      .eq("email", email);
+
+    if (updateError) throw updateError;
 
     const welcomeResponse = await fetch("/api/send-email", {
       method: "POST",
@@ -94,7 +91,11 @@ export async function sendOTPViaEmail(email: string): Promise<string> {
     if (!welcomeResponse.ok) {
       throw new Error("Failed to send OTP via Vercel endpoint");
     }
-  } catch (dbError) {
+  } catch (dbError: any) {
+    if (dbError.message === "Your email is not registered with us." || 
+        dbError.message === "Your employer account is pending activation. Please contact support.") {
+      throw dbError;
+    }
     console.warn("Supabase auth offline/tables not ready, falling back to local simulation.", dbError);
     const otpData = {
       code: otp,

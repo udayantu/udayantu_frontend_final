@@ -150,7 +150,7 @@ const EmployerLogin = () => {
         }
         setStep("otp");
       } else {
-        setError("Failed to send OTP");
+        setError(result.error || "Failed to send OTP");
       }
     }
   };
