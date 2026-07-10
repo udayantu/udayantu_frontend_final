@@ -52,6 +52,7 @@ export default function AdminDashboard() {
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [isInitializing, setIsInitializing] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     // Initializing default secure credentials
@@ -150,63 +151,210 @@ export default function AdminDashboard() {
 
   if (!isSecureAdminLoggedIn) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] px-4 font-sans select-none relative overflow-hidden">
-        {/* Soft background glow accents */}
-        <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-blue-100/40 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-orange-100/35 rounded-full blur-[120px] pointer-events-none" />
+      <div className="min-h-screen flex flex-col md:flex-row bg-[#F8FAFC] font-sans overflow-hidden">
+        {/* Left Column: Premium Dark blue gradient and feature list */}
+        <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white p-12 lg:p-16 flex-col justify-between relative overflow-hidden select-none">
+          {/* Code grids background detail */}
+          <div className="absolute inset-0 bg-[radial-gradient(#f97316_1px,transparent_1px)] [background-size:16px_16px] opacity-[0.03] pointer-events-none" />
+          
+          {/* Header: Brand name (No logo icon) */}
+          <div className="relative z-10">
+            <div className="text-2xl font-black tracking-tight">
+              Uda<span className="text-[#EA580C]">Yantu</span>
+            </div>
+            <div className="text-xs text-slate-400 font-bold mt-0.5 tracking-wider uppercase">
+              Admin Portal
+            </div>
+          </div>
 
-        <div className="relative w-full max-w-md">
-          <Card className="border border-slate-100 bg-white/90 backdrop-blur-xl text-slate-800 rounded-3xl p-8 shadow-xl relative z-10">
-            <CardHeader className="text-center p-0 pb-6 space-y-2">
-              <div className="w-16 h-16 bg-[#FF5A1F]/10 border border-[#FF5A1F]/20 rounded-2xl flex items-center justify-center mx-auto mb-2 text-[#FF5A1F] shadow-sm">
-                <ShieldCheck className="w-8 h-8" />
-              </div>
-              <CardTitle className="text-2xl font-black tracking-tight text-[#1E3A63]">Secure Admin Portal</CardTitle>
-              <CardDescription className="text-slate-500 text-xs">
-                Enter your administrative credentials to verify portal access.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0 space-y-4">
+          {/* Hero Content */}
+          <div className="my-auto space-y-6 relative z-10 max-w-lg">
+            {/* Tagline Badge */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-xs font-semibold text-slate-300">
+              <Shield className="w-3.5 h-3.5 text-[#EA580C]" />
+              Secure. Smart. Built for Impact.
+            </div>
+
+            <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+              Empowering Businesses. Transforming <span className="text-[#EA580C]">Talent.</span>
+            </h1>
+
+            <p className="text-slate-300 text-base leading-relaxed font-medium">
+              Welcome to the UdaYantu Admin Portal. Access powerful tools, insights, and controls to manage and scale with confidence.
+            </p>
+
+            {/* Feature items */}
+            <div className="grid grid-cols-3 gap-6 pt-6 border-t border-slate-800/85">
               <div className="space-y-2">
-                <Label htmlFor="admin-email" className="text-slate-600 font-semibold text-xs">Admin Email Address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
-                  <Input
-                    id="admin-email"
-                    type="email"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    placeholder="name@udayantu.com"
-                    className="pl-10 bg-white border-slate-200 focus:border-[#FF5A1F] text-slate-800 rounded-xl h-10 shadow-sm"
-                    onKeyDown={(e) => { if (e.key === "Enter") handleSecureLogin(); }}
+                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700 flex items-center justify-center text-[#EA580C]">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <h3 className="text-sm font-bold text-white">Enterprise Secure</h3>
+                <p className="text-xs text-slate-400 leading-normal">Bank-level encryption to protect your data</p>
+              </div>
+
+              <div className="space-y-2">
+                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700 flex items-center justify-center text-[#EA580C]">
+                  <BarChart3 className="w-5 h-5" />
+                </div>
+                <h3 className="text-sm font-bold text-white">Real-time Insights</h3>
+                <p className="text-xs text-slate-400 leading-normal">Actionable dashboards for smarter decisions</p>
+              </div>
+
+              <div className="space-y-2">
+                <div className="w-10 h-10 rounded-xl bg-slate-800/70 border border-slate-700 flex items-center justify-center text-[#EA580C]">
+                  <Users className="w-5 h-5" />
+                </div>
+                <h3 className="text-sm font-bold text-white">Built for Scale</h3>
+                <p className="text-xs text-slate-400 leading-normal">Designed to grow with your organization</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer branding */}
+          <div className="relative z-10 text-xs text-slate-500 font-bold uppercase tracking-widest">
+            © {new Date().getFullYear()} UdaYantu Technologies
+          </div>
+        </div>
+
+        {/* Right Column: Light Screen with Login Card */}
+        <div className="w-full md:w-1/2 bg-[#F8FAFC] flex items-center justify-center p-6 lg:p-12 min-h-screen relative">
+          {/* Soft background pattern */}
+          <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:20px_20px] opacity-40 pointer-events-none" />
+
+          <div className="w-full max-w-md relative z-10">
+            <Card className="border border-slate-100/90 bg-white/95 backdrop-blur-xl rounded-[24px] p-8 shadow-xl relative">
+              <CardHeader className="text-center p-0 pb-6 space-y-2">
+                {/* Logo integration as requested */}
+                <div className="flex justify-center mb-2">
+                  <img 
+                    src={logoImage} 
+                    alt="UdaYantu Logo" 
+                    className="h-16 w-auto object-contain" 
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="admin-password" className="text-slate-600 font-semibold text-xs">Security Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
-                  <Input
-                    id="admin-password"
-                    type="password"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="pl-10 bg-white border-slate-200 focus:border-[#FF5A1F] text-slate-800 rounded-xl h-10 shadow-sm"
-                    onKeyDown={(e) => { if (e.key === "Enter") handleSecureLogin(); }}
-                  />
+                <CardTitle className="text-2xl font-black tracking-tight text-slate-900">Welcome Back</CardTitle>
+                <CardDescription className="text-slate-500 text-sm font-medium">
+                  Sign in to continue to your admin dashboard
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent className="p-0 space-y-4 font-sans">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-email" className="text-slate-700 font-bold text-xs">Admin Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
+                    <Input
+                      id="admin-email"
+                      type="email"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      placeholder="name@udayantu.com"
+                      className="pl-10 bg-white border-slate-200 focus:border-[#EA580C] text-slate-800 rounded-xl h-11 shadow-sm font-medium"
+                      onKeyDown={(e) => { if (e.key === "Enter") handleSecureLogin(); }}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <Button
-                onClick={handleSecureLogin}
-                className="w-full bg-[#FF5A1F] hover:bg-[#e04f1a] text-white rounded-xl font-bold h-10 shadow-md shadow-[#FF5A1F]/10 mt-4 transition-all"
+                <div className="space-y-2">
+                  <Label htmlFor="admin-password" className="text-slate-700 font-bold text-xs">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
+                    <Input
+                      id="admin-password"
+                      type={showPassword ? "text" : "password"}
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className="pl-10 pr-10 bg-white border-slate-200 focus:border-[#EA580C] text-slate-800 rounded-xl h-11 shadow-sm font-medium"
+                      onKeyDown={(e) => { if (e.key === "Enter") handleSecureLogin(); }}
+                    />
+                    {/* Show/Hide eye icon toggle */}
+                    <button 
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    >
+                      {showPassword ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded border-slate-300 text-[#EA580C] focus:ring-[#EA580C] accent-[#EA580C]"
+                      defaultChecked 
+                    />
+                    <span className="text-xs text-slate-600 font-bold">Remember me</span>
+                  </label>
+                  <button 
+                    type="button" 
+                    onClick={() => toast({ title: "Reset Link Sent", description: "If the email is valid, you'll receive reset instructions." })}
+                    className="text-xs text-[#EA580C] font-bold hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+
+                <Button
+                  onClick={handleSecureLogin}
+                  className="w-full bg-[#EA580C] hover:bg-[#d94f06] text-white rounded-xl font-bold h-11 shadow-md shadow-[#EA580C]/10 mt-6 transition-all gap-1.5 flex items-center justify-center"
+                >
+                  Sign In to Dashboard <span className="text-lg">→</span>
+                </Button>
+
+                {/* Divider OR */}
+                <div className="relative flex py-4 items-center">
+                  <div className="flex-grow border-t border-slate-200"></div>
+                  <span className="flex-shrink mx-4 text-slate-400 text-xs font-bold uppercase tracking-wider">OR</span>
+                  <div className="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                {/* Google Authentication */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => toast({ title: "Information", description: "Google Sign-In is only enabled for enterprise users. Please use your email/password." })}
+                  className="w-full bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700 rounded-xl font-bold h-11 transition-all flex items-center justify-center gap-2"
+                >
+                  {/* Google Color Icon SVG */}
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.54 14.98 1 12 1 7.35 1 3.37 3.65 1.39 7.56l3.85 2.99c.92-2.77 3.5-4.51 6.76-4.51z"/>
+                    <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.7 2.87c2.16-2 3.72-4.94 3.72-8.69z"/>
+                    <path fill="#FBBC05" d="M5.24 14.75c-.24-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29L1.39 7.18C.5 8.93 0 10.91 0 13s.5 4.07 1.39 5.82l3.85-3.07z"/>
+                    <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.7-2.87c-1.12.75-2.56 1.22-4.26 1.22-3.26 0-5.84-1.74-6.76-4.51L1.39 17C3.37 20.91 7.35 23 12 23z"/>
+                  </svg>
+                  Continue with Google
+                </Button>
+
+                {/* Secure subtext */}
+                <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 font-medium pt-4">
+                  <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Secure login protected by 256-bit encryption
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Footer info links */}
+            <div className="flex items-center justify-between text-xs text-slate-400 font-bold px-2 mt-6">
+              <button 
+                type="button" 
+                onClick={() => toast({ title: "Support Contacted", description: "An email was dispatched to support@udayantu.com. Our staff will respond within 24 hours." })}
+                className="hover:text-slate-600 transition-colors"
               >
-                Verify & Continue
-              </Button>
-            </CardContent>
-          </Card>
+                Need help? <span className="text-[#EA580C] hover:underline">Contact Support</span>
+              </button>
+              <button type="button" className="hover:text-slate-600 transition-colors">Cookie Settings</button>
+            </div>
+          </div>
         </div>
       </div>
     );
