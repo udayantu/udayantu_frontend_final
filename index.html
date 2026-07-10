@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- DNS Prefetch for Performance -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="https://api.supabase.co" />
+    
+    <!-- Preconnect for Critical Resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://api.supabase.co" />
+    
+    <!-- Font Loading Strategy - Optimized for performance with font-display: swap and preload -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Open+Sans:wght@400;500&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Open+Sans:wght@400;500&display=swap" /></noscript>
+    
+    <!-- Favicon - UdaYantu Brand Icon -->
+    <link rel="icon" type="image/png" href="/favicon.png?v=2" />
+    <link rel="shortcut icon" type="image/png" href="/favicon.png?v=2" />
+    <link rel="apple-touch-icon" href="/favicon.png?v=2" />
+    
+    <!-- Theming -->
+    <meta name="theme-color" content="#0EA5E9" />
+    
+    <!-- Core SEO Meta Tags -->
+    <title>UdaYantu: Empowering Rural & Tier 3-4 Students | 100% Job Placement Guarantee</title>
+    <meta name="description" content="Gain the skills and support to launch your career. UdaYantu equips rural and Tier 3-4 students with role-specific training, job placement guarantees, and mentorship. Register now or join our employer network!" />
+    <meta name="author" content="UdaYantu" />
+    <meta name="keywords" content="Rural employability India, Tier 3 jobs, Business Development training, Customer Success careers, Pay after placement training, rural graduates India, career development, job placement" />
+    
+    <!-- Additional SEO Meta Tags -->
+    <meta name="language" content="English" />
+    <meta name="revisit-after" content="7 days" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    
+    <!-- Open Graph Tags for Social Media Sharing -->
+    <meta property="og:title" content="UdaYantu: Rise Up Together - Career Training for Rural Students" />
+    <meta property="og:description" content="100% job placement guarantee for rural and Tier 3-4 students. Role-based training, mentorship, and career support." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://udayantu.com" />
+    <meta property="og:image" content="https://udayantu.com/favicon.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_IN" />
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@UdaYantu" />
+    <meta name="twitter:image" content="https://udayantu.com/favicon.png" />
+    <meta name="twitter:creator" content="@UdaYantu" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://udayantu.com" />
+    
+    <!-- Alternate Links for Language Versions (if needed) -->
+    <link rel="alternate" hreflang="en-IN" href="https://udayantu.com" />
+    
+    <!-- Performance: Resource Hints -->
+    
+    <link rel="prefetch" href="/robots.txt" />
+    
+    <!-- Cache Control: avoid stale HTML after deploys (can cause blank screens) -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <!-- Boot hardening: prevent Storage (localStorage/sessionStorage) exceptions from crashing app in private/incognito modes -->
+    <script>
+      (function () {
+        function createMemoryStorage() {
+          var store = Object.create(null);
+          return {
+            get length() {
+              return Object.keys(store).length;
+            },
+            key: function (index) {
+              try {
+                return Object.keys(store)[index] || null;
+              } catch (e) {
+                return null;
+              }
+            },
+            getItem: function (key) {
+              try {
+                key = String(key);
+                return Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null;
+              } catch (e) {
+                return null;
+              }
+            },
+            setItem: function (key, value) {
+              try {
+                store[String(key)] = String(value);
+              } catch (e) {
+                // ignore
+              }
+            },
+            removeItem: function (key) {
+              try {
+                delete store[String(key)];
+              } catch (e) {
+                // ignore
+              }
+            },
+            clear: function () {
+              try {
+                Object.keys(store).forEach(function (k) {
+                  delete store[k];
+                });
+              } catch (e) {
+                // ignore
+              }
+            },
+          };
+        }
+
+        function createHybridStorage(nativeStorage) {
+          var mem = createMemoryStorage();
+          var testKey = "__udayantu_storage_test__";
+
+          function nativeOk() {
+            try {
+              if (!nativeStorage) return false;
+              nativeStorage.setItem(testKey, "1");
+              nativeStorage.removeItem(testKey);
+              return true;
+            } catch (e) {
+              return false;
+            }
+          }
+
+          var canUseNative = nativeOk();
+
+          return {
+            get length() {
+              try {
+                return (canUseNative && nativeStorage ? nativeStorage.length : 0) + mem.length;
+              } catch (e) {
+                return mem.length;
+              }
+            },
+            key: function (index) {
+              // Prefer native keys first, then memory keys
+              try {
+                if (canUseNative && nativeStorage && index < nativeStorage.length) {
+                  return nativeStorage.key(index);
+                }
+              } catch (e) {
+                // ignore
+              }
+              return mem.key(index);
+            },
+            getItem: function (key) {
+              try {
+                if (canUseNative && nativeStorage) {
+                  var v = nativeStorage.getItem(key);
+                  if (v !== null && v !== undefined) return v;
+                }
+              } catch (e) {
+                // ignore
+              }
+              return mem.getItem(key);
+            },
+            setItem: function (key, value) {
+              var wroteNative = false;
+              try {
+                if (canUseNative && nativeStorage) {
+                  nativeStorage.setItem(key, value);
+                  wroteNative = true;
+                }
+              } catch (e) {
+                wroteNative = false;
+              }
+              if (!wroteNative) {
+                mem.setItem(key, value);
+              }
+            },
+            removeItem: function (key) {
+              try {
+                if (nativeStorage) nativeStorage.removeItem(key);
+              } catch (e) {
+                // ignore
+              }
+              mem.removeItem(key);
+            },
+            clear: function () {
+              try {
+                if (nativeStorage) nativeStorage.clear();
+              } catch (e) {
+                // ignore
+              }
+              mem.clear();
+            },
+          };
+        }
+
+        function installSafeStorage(propName) {
+          var nativeStorage = null;
+          try {
+            nativeStorage = window[propName];
+          } catch (e) {
+            nativeStorage = null;
+          }
+
+          var safe = createHybridStorage(nativeStorage);
+
+          // Try to replace the global storage object so *any* direct `localStorage` usage (incl. auth client) won't crash.
+          try {
+            Object.defineProperty(window, propName, {
+              value: safe,
+              configurable: true,
+              enumerable: true,
+              writable: false,
+            });
+          } catch (e) {
+            try {
+              window[propName] = safe;
+            } catch (e2) {
+              // ignore
+            }
+          }
+        }
+
+        try {
+          installSafeStorage("localStorage");
+        } catch (e) {
+          // ignore
+        }
+
+        try {
+          installSafeStorage("sessionStorage");
+        } catch (e) {
+          // ignore
+        }
+      })();
+    </script>
+
+    <!-- Disable service worker permanently: unregister existing SW + clear caches once, then reload -->
+    <script>
+      (function () {
+        var FLAG = "__udayantu_sw_disabled";
+
+        function hasFlag() {
+          try {
+            var u = new URL(window.location.href);
+            return u.searchParams.get(FLAG) === "1";
+          } catch (e) {
+            return false;
+          }
+        }
+
+        function setFlagAndReload() {
+          try {
+            var u = new URL(window.location.href);
+            u.searchParams.set(FLAG, "1");
+            u.searchParams.set("__reload", String(Date.now()));
+            window.location.replace(u.toString());
+          } catch (e) {
+            // ignore
+          }
+        }
+
+        if (hasFlag()) return;
+
+        var hasSW = "serviceWorker" in navigator;
+        var hasCaches = "caches" in window;
+        if (!hasSW && !hasCaches) return;
+
+        Promise.all([
+          hasSW
+            ? navigator.serviceWorker.getRegistrations().catch(function () {
+                return [];
+              })
+            : Promise.resolve([]),
+          hasCaches
+            ? caches.keys().catch(function () {
+                return [];
+              })
+            : Promise.resolve([]),
+        ])
+          .then(function (results) {
+            var regs = results[0] || [];
+            var keys = results[1] || [];
+
+            // Only do the reset if we actually have an existing SW registration or caches.
+            if (!regs.length && !keys.length) return;
+
+            var tasks = [];
+            if (regs.length) {
+              tasks.push(
+                Promise.all(
+                  regs.map(function (r) {
+                    try {
+                      return r.unregister();
+                    } catch (e) {
+                      return Promise.resolve(false);
+                    }
+                  })
+                )
+              );
+            }
+
+            if (keys.length && hasCaches) {
+              tasks.push(
+                Promise.all(
+                  keys.map(function (k) {
+                    try {
+                      return caches.delete(k);
+                    } catch (e) {
+                      return Promise.resolve(false);
+                    }
+                  })
+                )
+              );
+            }
+
+            return Promise.all(tasks).then(function () {
+              setFlagAndReload();
+            });
+          })
+          .catch(function () {
+            // ignore
+          });
+      })();
+    </script>
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <!-- Boot recovery: if a cached/stale deploy serves missing JS chunks, recover once -->
+    <script>
+      (function () {
+        const BOOT_TIMEOUT_MS = 12000;
+        const RECOVERY_PARAM = "__udayantu_recovered";
+        const RELOAD_PARAM = "__reload";
+
+        function isMounted() {
+          try {
+            if (window.__UDAYANTU_APP_MOUNTED__ === true) return true;
+            const root = document.getElementById("root");
+            return !!root && root.childNodes && root.childNodes.length > 0;
+          } catch {
+            return false;
+          }
+        }
+
+        function hasRecoveredAlready() {
+          try {
+            const url = new URL(window.location.href);
+            return url.searchParams.get(RECOVERY_PARAM) === "1";
+          } catch {
+            return false;
+          }
+        }
+
+        async function recoverOnce() {
+          if (hasRecoveredAlready()) return;
+
+          try {
+            if ("serviceWorker" in navigator) {
+              const regs = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(regs.map((r) => r.unregister()));
+            }
+
+            if ("caches" in window) {
+              const keys = await caches.keys();
+              await Promise.all(keys.map((k) => caches.delete(k)));
+            }
+          } catch {
+            // ignore
+          } finally {
+            const url = new URL(window.location.href);
+            url.searchParams.set(RECOVERY_PARAM, "1");
+            url.searchParams.set(RELOAD_PARAM, String(Date.now()));
+            window.location.replace(url.toString());
+          }
+        }
+
+        function looksLikeChunkError(message) {
+          return /Loading chunk|ChunkLoadError|Failed to fetch dynamically imported module|importing a module script failed/i.test(
+            String(message || "")
+          );
+        }
+
+        window.addEventListener("error", (e) => {
+          if (looksLikeChunkError(e && e.message)) recoverOnce();
+        });
+
+        window.addEventListener("unhandledrejection", (e) => {
+          const reason = e && e.reason;
+          const msg = (reason && (reason.message || reason)) || "";
+          if (looksLikeChunkError(msg)) recoverOnce();
+        });
+
+        window.setTimeout(() => {
+          if (!isMounted()) recoverOnce();
+        }, BOOT_TIMEOUT_MS);
+      })();
+    </script>
+
+    <!-- Container for Firebase Phone Auth invisible reCAPTCHA -->
+    <div id="recaptcha-container"></div>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

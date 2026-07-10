@@ -1,0 +1,49 @@
+project_id = "kkreemzlsgtiecoohpew"
+
+[functions.send-otp]
+verify_jwt = false
+
+[functions.verify-otp]
+verify_jwt = false
+
+[functions.create-payment-order]
+verify_jwt = true
+
+[functions.verify-payment]
+verify_jwt = true
+
+[functions.generate-assessment]
+verify_jwt = true
+
+[functions.evaluate-assessment]
+verify_jwt = true
+
+[functions.recommend-role]
+verify_jwt = true
+
+[functions.send-employer-welcome]
+verify_jwt = false
+
+[functions.send-payment-confirmation]
+verify_jwt = false
+
+[functions.rss-feed]
+verify_jwt = false
+
+[functions.get-student-readiness]
+verify_jwt = true
+
+[functions.get-student-interviews]
+verify_jwt = true
+
+[functions.initialize-contacts]
+verify_jwt = false
+
+[functions.analytics-track]
+verify_jwt = false
+
+[functions.analytics-event]
+verify_jwt = false
+
+[functions.analytics-employers]
+verify_jwt = true
