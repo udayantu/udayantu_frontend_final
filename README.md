@@ -1,73 +1,111 @@
-# Welcome to your Lovable project
+# 🚀 UdaYantu - Upskilling & Career Placement Platform
 
-## Project info
+UdaYantu is a premium, high-conversion upskilling and career placement ecosystem designed to bridge the employability gap for rural and Tier 3-4 graduates (B.A., B.Sc., B.Com., M.A., M.Sc., M.Com.) across India. The portal connects candidates directly to global employers through role-specific training, real-time assessment trackers, and automated hiring pipelines.
 
-**URL**: https://lovable.dev/projects/8f7d95d8-b5ca-49c9-b46d-3db64e0f5fea
+---
 
-## How can I edit this code?
+## 🛠️ Key Technical Architecture
 
-There are several ways of editing your application.
+### 1. High-Conversion Frontend
+* **Core Framework**: React 18 SPA built on **Vite** for sub-second hot-module reloading and optimized production bundles.
+* **Component Library**: **shadcn/ui** primitives built with Radix UI and styled using TailwindCSS.
+* **Micro-Animations**: Seamless interface transitions powered by **Framer Motion**.
+* **Global Navigation & Layout**: Includes a premium responsive desktop navbar and a dedicated **Bottom Mobile Navigation Bar** tailored for smartphone viewports.
 
-**Use Lovable**
+### 2. Client-Side Authentication (Firebase OTP)
+* **SMS Gateway Integration**: Native integration with **Firebase Phone Authentication** providing **10,000 free monthly SMS dispatches** out-of-the-box.
+* **Spam Prevention**: Utilizes Firebase's invisible reCAPTCHA verifier to prevent automated spam attempts.
+* **Local Session Caching**: Features client-side local caching (`udayantu_mock_user`) to keep local sandboxes fully operational without database latency.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/8f7d95d8-b5ca-49c9-b46d-3db64e0f5fea) and start prompting.
+### 3. Realtime Supabase Database Sync
+* **Synchronized Operations**: Connected to a live, real-time **Supabase PostgreSQL database** using the official client wrapper.
+* **Offline Fail-safes**: Syncs with browser `localStorage` to ensure continued functionality and offline data preservation.
 
-Changes made via Lovable will be committed automatically to this repo.
+### 4. Admin Management Dashboard
+* **Operations Control**: Features comprehensive student directories, assessment scoring, outcomes dashboards, and waitlist management.
+* **Data Visualization**: Live vector donut and trend line charts for placements statistics and hiring ratios.
+* **Data Portability**: Integrated CSV Import & Export handlers for candidate databases.
+* **Communications Center**: Broadcast announcement wizards via SMS, Email, and WhatsApp templates.
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 📁 Key File Structure
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```text
+├── src/
+│   ├── components/
+│   │   ├── admin/             # Stats, Outcomes, and Directory panels
+│   │   │   ├── AdminCommunications.tsx  # Campaign Broadcaster
+│   │   │   ├── AdminReports.tsx         # Report Compilations
+│   │   │   └── AdminEmployers.tsx       # Employer CRM directory
+│   │   ├── ui/                # shadcn primitives
+│   │   ├── Navbar.tsx         # Responsive Nav + Bottom Mobile Bar
+│   │   └── AuthModal.tsx      # Firebase Registration & Login
+│   ├── hooks/
+│   │   └── useAuth.tsx        # Firebase & Local Cache Auth Sync
+│   ├── lib/
+│   │   └── firebase.ts        # Firebase Core & Auth Initialization
+│   ├── pages/
+│   │   ├── Auth.tsx           # Standalone Firebase OTP Login
+│   │   ├── AdminDashboard.tsx # Operator Nav Panel
+│   │   └── EmployerLogin.tsx  # Employer access portal
+│   └── main.tsx               # App entry point
+├── server/
+│   └── index.ts               # Local Express server with Dotenv loading
+├── index.html                 # Main template with #recaptcha-container
+└── .env                       # Environment secrets configurations
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🚀 Local Development Setup
 
-**Use GitHub Codespaces**
+Follow these steps to spin up the local development ecosystem:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### 1. Prerequisites
+Ensure you have [Node.js](https://nodejs.org/) installed (v18+ recommended).
 
-## What technologies are used for this project?
+### 2. Clone the Repository & Install Dependencies
+```bash
+git clone https://github.com/udayantu/udayantu_frontend_final.git
+cd udayantu_frontend_final
+npm install
+```
 
-This project is built with:
+### 3. Configure Local Credentials
+Create a `.env` file at the root of your directory and add the configuration keys:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```env
+# Supabase Parameters
+VITE_SUPABASE_PROJECT_ID="ptlgpjixohgmhvrqfmdw"
+VITE_SUPABASE_URL="https://ptlgpjixohgmhvrqfmdw.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY="eyJhbGciOiJIUzI1..."
 
-## How can I deploy this project?
+# Firebase Phone Auth Keys
+VITE_FIREBASE_API_KEY="AIzaSy..."
+VITE_FIREBASE_AUTH_DOMAIN="udayantu-db62e.firebaseapp.com"
+VITE_FIREBASE_PROJECT_ID="udayantu-db62e"
+VITE_FIREBASE_STORAGE_BUCKET="udayantu-db62e.firebasestorage.app"
+VITE_FIREBASE_MESSAGING_SENDER_ID="449537517766"
+VITE_FIREBASE_APP_ID="1:449537517766:web:b1a26ea..."
+```
 
-Simply open [Lovable](https://lovable.dev/projects/8f7d95d8-b5ca-49c9-b46d-3db64e0f5fea) and click on Share -> Publish.
+### 4. Start the Dev Server
+Launch Vite and the local Express server concurrently:
+```bash
+npm run dev:full
+```
+* **Frontend**: Open [http://localhost:5001](http://localhost:5001) in your browser.
+* **Express Server**: Runs on port `3001` to serve mock data fallback structures.
 
-## Can I connect a custom domain to my Lovable project?
+---
 
-Yes, you can!
+## 🧪 Testing Firebase OTP Locally (No Charges)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+To verify the OTP flow without setting up payment details on your Firebase project:
+1. Go to your **Firebase Console** > **Authentication** > **Sign-in method** > click **Phone**.
+2. Expand **Phone numbers for testing**.
+3. Add your number (e.g., `+917292858748`) and choose a verification code (e.g., `123456`).
+4. Click **Save**.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+You can now sign in instantly on your local site using this verification code!
