@@ -76,10 +76,27 @@ const WithTransition = memo(({ children }: { children: React.ReactNode }) => {
 
 const RoutesContent = memo(() => {
   const location = useLocation();
+  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+  const isAdminSubdomain = hostname.startsWith("admin.");
   
   return (
     <Routes location={location} key={location.pathname}>
-      <Route path="/" element={<WithTransition><Index /></WithTransition>} />
+      <Route 
+        path="/" 
+        element={
+          isAdminSubdomain ? (
+            <Suspense fallback={<PageLoader />}>
+              <WithTransition>
+                <AdminDashboard />
+              </WithTransition>
+            </Suspense>
+          ) : (
+            <WithTransition>
+              <Index />
+            </WithTransition>
+          )
+        } 
+      />
       <Route path="/auth" element={<Suspense fallback={<PageLoader />}><WithTransition><Auth /></WithTransition></Suspense>} />
       <Route path="/dashboard" element={<Suspense fallback={<PageLoader />}><WithTransition><StudentDashboard /></WithTransition></Suspense>} />
       <Route path="/payment" element={<Suspense fallback={<PageLoader />}><WithTransition><Payment /></WithTransition></Suspense>} />
