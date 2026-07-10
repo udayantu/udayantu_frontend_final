@@ -162,7 +162,7 @@ export default function AdminDashboard() {
             <img 
               src={logoImage} 
               alt="UdaYantu Logo" 
-              className="h-12 w-auto object-contain bg-white/10 rounded-lg p-1.5 backdrop-blur-xs border border-white/10" 
+              className="h-16 w-auto object-contain" 
             />
             <div>
               <div className="text-2xl font-black tracking-tight leading-tight">
