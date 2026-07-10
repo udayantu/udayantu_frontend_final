@@ -405,6 +405,7 @@ export function AdminEmployers() {
         hiring_timeline: "Immediate",
         roles_needed: [industry],
         created_at: new Date().toISOString(),
+        status: status,
         notes: JSON.stringify({
           city,
           state,
@@ -463,6 +464,7 @@ export function AdminEmployers() {
         designation: designation,
         cohort_size_estimate: parseInt(openingsCount) || 10,
         roles_needed: [industry],
+        status: status,
         notes: JSON.stringify({
           city,
           state,
@@ -482,6 +484,7 @@ export function AdminEmployers() {
         designation: designation,
         cohort_size_estimate: parseInt(openingsCount) || 10,
         roles_needed: [industry],
+        status: status,
         notes: updatedEmployer.notes
       }).eq("id", selectedEmployer.id);
 
@@ -638,7 +641,20 @@ export function AdminEmployers() {
         if (newEmployersList.length === 0) throw new Error("No valid rows could be imported.");
 
         // Sync to Supabase
-        const { error } = await supabase.from("employers").insert(newEmployersList);
+        const dbList = newEmployersList.map(e => ({
+          company_name: e.company_name,
+          contact_name: e.contact_name,
+          email: e.email,
+          phone: e.phone,
+          designation: e.designation,
+          cohort_size_estimate: e.cohort_size_estimate,
+          hiring_timeline: e.hiring_timeline,
+          roles_needed: e.roles_needed,
+          created_at: e.created_at,
+          status: e.status,
+          notes: e.notes
+        }));
+        const { error } = await supabase.from("employers").insert(dbList);
         if (error) console.warn("Supabase import insert error:", error);
 
         // Sync to local storage

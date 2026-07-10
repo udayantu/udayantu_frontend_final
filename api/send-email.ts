@@ -21,7 +21,24 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { type, email, name, company, otp, mobile, role, city, message } = req.body;
+    const { 
+      type, 
+      email, 
+      name, 
+      company, 
+      otp, 
+      mobile, 
+      role, 
+      city, 
+      message,
+      contact_name,
+      company_name,
+      job_role,
+      hiring_count,
+      location,
+      waitlist_id,
+      submitted_date
+    } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
@@ -91,21 +108,337 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ success: true, data });
     }
 
-    // Default: Welcome email
+    // Default: Welcome email (Waitlist Confirmation)
+    const emailYear = new Date().getFullYear();
+    const formattedContactName = contact_name || name || 'Partner';
+    const formattedCompanyName = company_name || company || 'Your Company';
+    const formattedJobRole = job_role || 'General Recruiting';
+    const formattedHiringCount = hiring_count || '1-5';
+    const formattedLocation = location || 'Remote / Hybrid';
+    const formattedWaitlistId = waitlist_id || 'EMP-' + Math.floor(100000 + Math.random() * 900000);
+    const formattedSubmittedDate = formattedSubmittedDateValue(submitted_date);
+    const formattedDashboardUrl = 'https://udayantu.com/employer-login';
+
+    function formattedSubmittedDateValue(rawDate?: string) {
+      if (rawDate) return rawDate;
+      return new Date().toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
     const { data, error } = await resend.emails.send({
       from: 'UdaYantu <onboarding@resend.dev>',
       to: [email],
       bcc: ['udayantu10x@gmail.com'],
-      subject: 'Welcome to UdaYantu Employer Waitlist — Priority Access Confirmed',
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 25px; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
-          <h2 style="color: #1E3A63;">Welcome to UdaYantu!</h2>
-          <p>Thank you for joining the UdaYantu Employer Waitlist. We are thrilled to partner with you to connect pre-trained rural talent with your organization.</p>
-          <p>We will reach out to you shortly with next steps.</p>
-          <br/>
-          <p>Best regards,<br/>The UdaYantu Team</p>
-        </div>
-      `
+      subject: 'Welcome to UdaYantu Employer Network — Hiring Waitlist Confirmed',
+      html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome to UdaYantu Employer Network</title>
+</head>
+
+<body style="margin:0;padding:0;background:#f5f7fb;font-family:Arial,Helvetica,sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f5f7fb">
+<tr>
+<td align="center">
+
+<table width="640" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="margin:40px auto;border-radius:16px;overflow:hidden;">
+
+<!-- Header -->
+
+<tr>
+<td style="background:#0F172A;padding:40px;text-align:center;">
+
+<h1 style="margin:0;color:#ffffff;font-size:34px;font-weight:700;">
+UdaYantu
+</h1>
+
+<p style="margin:14px 0 0;color:#CBD5E1;font-size:16px;">
+Hire Job-Ready Talent. Faster. Smarter. Within Budget.
+</p>
+
+</td>
+</tr>
+
+<!-- Hero -->
+
+<tr>
+<td style="padding:50px 50px 20px;">
+
+<p style="margin:0;font-size:16px;color:#475569;">
+Hello <strong>${formattedContactName}</strong>,
+</p>
+
+<h2 style="margin:18px 0 20px;font-size:32px;color:#111827;line-height:42px;">
+Thank you for joining the UdaYantu Employer Hiring Network.
+</h2>
+
+<p style="font-size:17px;line-height:30px;color:#4B5563;margin:0;">
+We have successfully received your hiring waitlist request for
+<strong>${formattedCompanyName}</strong>.
+</p>
+
+<p style="font-size:17px;line-height:30px;color:#4B5563;">
+Our Employer Success Team will review your hiring requirements and
+match you with skilled, industry-ready candidates trained specifically
+for today's workplace.
+</p>
+
+</td>
+</tr>
+
+<!-- Card -->
+
+<tr>
+<td style="padding:10px 40px;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;">
+<tr>
+<td style="padding:30px;">
+
+<h3 style="margin-top:0;color:#0F172A;font-size:22px;">
+What happens next?
+</h3>
+
+<table cellpadding="0" cellspacing="0">
+
+<tr>
+<td width="32" valign="top" style="font-size:22px;">✅</td>
+<td style="padding-bottom:18px;color:#475569;font-size:16px;line-height:28px;">
+Our team reviews your hiring preferences, required skills, location,
+budget and expected joining timeline.
+</td>
+</tr>
+
+<tr>
+<td valign="top" style="font-size:22px;">✅</td>
+<td style="padding-bottom:18px;color:#475569;font-size:16px;line-height:28px;">
+We shortlist candidates who have successfully completed
+industry-aligned learning, assessments and employability validation.
+</td>
+</tr>
+
+<tr>
+<td valign="top" style="font-size:22px;">✅</td>
+<td style="padding-bottom:18px;color:#475569;font-size:16px;line-height:28px;">
+You'll receive candidate profiles, assessment summaries,
+skills and interview availability.
+</td>
+</tr>
+
+<tr>
+<td valign="top" style="font-size:22px;">✅</td>
+<td style="color:#475569;font-size:16px;line-height:28px;">
+Once you shortlist candidates, interviews can be scheduled directly
+through UdaYantu.
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</td>
+</tr>
+
+<!-- Why -->
+
+<tr>
+<td style="padding:40px;">
+
+<h3 style="font-size:26px;color:#111827;margin-top:0;">
+Why employers choose UdaYantu
+</h3>
+
+<table width="100%" cellpadding="8">
+
+<tr>
+
+<td width="50%" valign="top">
+
+<div style="background:#ffffff;border:1px solid #E5E7EB;border-radius:12px;padding:20px;height:100%;">
+
+<h4 style="margin-top:0;color:#111827;">🎯 Job-Ready Talent</h4>
+
+<p style="color:#6B7280;line-height:26px;font-size:15px;">
+Candidates are trained on practical skills, tools, aptitude,
+communication and workplace readiness—not just theory.
+</p>
+
+</div>
+
+</td>
+
+<td width="50%" valign="top">
+
+<div style="background:#ffffff;border:1px solid #E5E7EB;border-radius:12px;padding:20px;">
+
+<h4 style="margin-top:0;color:#111827;">⚡ Faster Hiring</h4>
+
+<p style="color:#6B7280;line-height:26px;font-size:15px;">
+Reduce sourcing effort by receiving pre-screened candidates aligned
+with your hiring criteria.
+</p>
+
+</div>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td valign="top">
+
+<div style="background:#ffffff;border:1px solid #E5E7EB;border-radius:12px;padding:20px;">
+
+<h4 style="margin-top:0;color:#111827;">🎯 Budget Friendly</h4>
+
+<p style="color:#6B7280;line-height:26px;font-size:15px;">
+Hire quality talent without spending months on recruitment agencies
+or expensive hiring campaigns.
+</p>
+
+</div>
+
+</td>
+
+<td valign="top">
+
+<div style="background:#ffffff;border:1px solid #E5E7EB;border-radius:12px;padding:20px;">
+
+<h4 style="margin-top:0;color:#111827;">📈 Scale Confidently</h4>
+
+<p style="color:#6B7280;line-height:26px;font-size:15px;">
+Whether hiring one employee or building an entire team,
+UdaYantu grows with your hiring needs.
+</p>
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+</tr>
+
+<!-- CTA -->
+
+<tr>
+<td align="center" style="padding:20px 40px 50px;">
+
+<a href="${formattedDashboardUrl}"
+style="background:#2563EB;
+display:inline-block;
+padding:18px 34px;
+border-radius:10px;
+text-decoration:none;
+color:#ffffff;
+font-size:17px;
+font-weight:bold;">
+
+Complete Company Hiring Profile
+
+</a>
+
+<p style="margin-top:18px;color:#6B7280;font-size:15px;line-height:26px;">
+Completing your company profile helps us recommend better candidates
+and reduces hiring turnaround time.
+</p>
+
+</td>
+</tr>
+
+<!-- Waitlist Info -->
+
+<tr>
+<td style="padding:0 40px 40px;">
+
+<table width="100%" style="border:1px solid #DBEAFE;background:#EFF6FF;border-radius:12px;">
+<tr>
+<td style="padding:24px;">
+
+<h3 style="margin-top:0;color:#1D4ED8;">
+Your Waitlist Details
+</h3>
+
+<table width="100%">
+
+<tr>
+<td style="padding:8px 0;color:#64748B;">Company</td>
+<td style="padding:8px 0;color:#111827;"><strong>${formattedCompanyName}</strong></td>
+</tr>
+
+<tr>
+<td style="padding:8px 0;color:#64748B;">Hiring For</td>
+<td style="padding:8px 0;color:#111827;">${formattedJobRole}</td>
+</tr>
+
+<tr>
+<td style="padding:8px 0;color:#64748B;">Expected Hiring</td>
+<td style="padding:8px 0;color:#111827;">${formattedHiringCount} Candidates</td>
+</tr>
+
+<tr>
+<td style="padding:8px 0;color:#64748B;">Location</td>
+<td style="padding:8px 0;color:#111827;">${formattedLocation}</td>
+</tr>
+
+<tr>
+<td style="padding:8px 0;color:#64748B;">Submitted On</td>
+<td style="padding:8px 0;color:#111827;">${formattedSubmittedDate}</td>
+</tr>
+
+<tr>
+<td style="padding:8px 0;color:#64748B;">Reference ID</td>
+<td style="padding:8px 0;color:#111827;"><strong>${formattedWaitlistId}</strong></td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</td>
+</tr>
+
+<!-- Footer -->
+
+<tr>
+<td style="background:#F8FAFC;padding:40px;text-align:center;">
+
+<p style="margin:0;color:#111827;font-size:18px;font-weight:bold;">
+Building Careers. Empowering Businesses.
+</p>
+
+<p style="margin:18px 0;color:#64748B;font-size:15px;line-height:28px;">
+Thank you for choosing UdaYantu as your hiring partner.
+We look forward to helping you build a stronger workforce.
+</p>
+
+<p style="margin-top:30px;color:#94A3B8;font-size:13px;">
+©️ ${emailYear} UdaYantu Technologies Pvt. Ltd.<br>
+All Rights Reserved.
+</p>
+
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>`
     });
 
     if (error) throw error;

@@ -66,7 +66,7 @@ export const EmployerSection = () => {
     setIsSubmitting(true);
     try {
       // Save to database
-      const { error: insertError } = await supabase
+      const { data: insertResult, error: insertError } = await supabase
         .from("employers")
         .insert({
           contact_name: data.contactPerson,
@@ -75,8 +75,11 @@ export const EmployerSection = () => {
           phone: data.mobile || "",
           designation: data.designation.join(", "),
           roles_needed: data.designation,
-          cohort_size_estimate: parseInt(data.hiringVolume.split("-")[0])
-        });
+          cohort_size_estimate: parseInt(data.hiringVolume.split("-")[0]),
+          status: "Pending"
+        })
+        .select()
+        .single();
 
       if (insertError) throw insertError;
 
@@ -101,9 +104,15 @@ export const EmployerSection = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: data.contactPerson,
+          type: "waitlist_welcome",
           email: data.email,
-          company: data.orgName
+          contact_name: data.contactPerson,
+          company_name: data.orgName,
+          job_role: data.designation.join(", ") || "General Recruiting",
+          hiring_count: data.hiringVolume || "1-5",
+          location: "Remote / Hybrid",
+          waitlist_id: insertResult?.id || "EMP-" + Math.floor(100000 + Math.random() * 900000),
+          submitted_date: new Date(insertResult?.created_at || new Date()).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' })
         })
       }).catch((error) => {
         // Log silently - don't fail form submission
