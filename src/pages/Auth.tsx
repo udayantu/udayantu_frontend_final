@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { LogIn, Smartphone, Loader2 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { signInWithPhoneNumber, RecaptchaVerifier } from "firebase/auth";
+import { auth as firebaseAuth } from "@/lib/firebase";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -20,6 +22,7 @@ export default function Auth() {
   const [isNewUser, setIsNewUser] = useState(false);
   const [isCheckingUser, setIsCheckingUser] = useState(false);
   const [language, setLanguage] = useState<"en" | "hi">("en");
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
 
   // Bilingual Support - Complete translations for Auth flow
   const text = {
@@ -163,33 +166,46 @@ export default function Auth() {
     }
   };
 
+  const getRecaptchaVerifier = () => {
+    if (!(window as any).recaptchaVerifier) {
+      try {
+        (window as any).recaptchaVerifier = new RecaptchaVerifier(
+          firebaseAuth,
+          "recaptcha-container",
+          {
+            size: "invisible",
+            callback: () => {},
+            "expired-callback": () => {
+              console.warn("reCAPTCHA expired, resetting...");
+              if ((window as any).recaptchaVerifier) {
+                (window as any).recaptchaVerifier.clear();
+                (window as any).recaptchaVerifier = null;
+              }
+            }
+          }
+        );
+      } catch (err) {
+        console.error("Error setting up RecaptchaVerifier:", err);
+      }
+    }
+    return (window as any).recaptchaVerifier;
+  };
+
   const handleSendOTP = async () => {
     setLoading(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('send-otp', {
-        body: { phone },
-      });
-
-      if (error) {
-        console.error('OTP send error:', error);
-        throw new Error(error.message || 'Failed to send OTP');
-      }
+      const phoneNumber = `+91${phone}`;
+      const appVerifier = getRecaptchaVerifier();
+      
+      const confirmResult = await signInWithPhoneNumber(firebaseAuth, phoneNumber, appVerifier);
+      setConfirmationResult(confirmResult);
 
       setOtpSent(true);
       toast({
         title: t.otpSent,
-        description: t.otpSentDesc,
+        description: t.otpSentDesc + " via Firebase",
       });
-
-      // For development - show OTP in toast
-      if (data?.otp) {
-        toast({
-          title: t.devMode,
-          description: `${t.devOtp}: ${data.otp}`,
-          duration: 10000,
-        });
-      }
     } catch (error: any) {
       console.error('Send OTP error:', error);
       toast({
@@ -214,42 +230,42 @@ export default function Auth() {
       return;
     }
 
+    if (!confirmationResult) {
+      toast({
+        title: t.error,
+        description: "No active verification code found. Please re-send OTP.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('verify-otp', {
-        body: { phone, otp },
+      const userCredential = await confirmationResult.confirm(otp);
+      const firebaseUser = userCredential.user;
+
+      const mockUser = {
+        id: firebaseUser.uid,
+        phone: firebaseUser.phoneNumber || phone,
+        email: `student_${phone}@udayantu.app`,
+        user_metadata: {
+          phone: firebaseUser.phoneNumber || phone,
+          verified: true
+        }
+      };
+
+      localStorage.setItem("udayantu_mock_user", JSON.stringify(mockUser));
+      window.dispatchEvent(new Event("storage"));
+
+      toast({
+        title: t.loginSuccess,
+        description: t.loginSuccessDesc,
       });
 
-      if (error) {
-        console.error('OTP verification error:', error);
-        throw new Error(error.message || 'Invalid OTP');
-      }
-
-      // Use session tokens from the response to authenticate
-      if (data?.session) {
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        });
-
-        if (sessionError) {
-          console.error('Session set error after OTP:', sessionError);
-          throw new Error(t.authFailed);
-        }
-
-        toast({
-          title: t.loginSuccess,
-          description: t.loginSuccessDesc,
-        });
-
-        // Small delay for better UX
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 500);
-      } else {
-        throw new Error(t.authResponse);
-      }
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 500);
     } catch (error: any) {
       console.error('Verify OTP error:', error);
       toast({
