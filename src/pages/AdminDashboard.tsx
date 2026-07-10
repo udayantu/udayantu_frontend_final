@@ -93,10 +93,6 @@ export default function AdminDashboard() {
     if (loginEmail.trim() === targetEmail && loginPassword === targetPassword) {
       sessionStorage.setItem("udayantu_admin_session", "active");
       setIsSecureAdminLoggedIn(true);
-      toast({
-        title: "Access Granted",
-        description: "Successfully authenticated administrative portal session.",
-      });
     } else {
       toast({
         title: "Authentication Failed",
