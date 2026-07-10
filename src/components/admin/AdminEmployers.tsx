@@ -816,8 +816,38 @@ export function AdminEmployers() {
             <div className="flex items-center gap-2">
               <CardTitle className="text-base font-extrabold text-[#1E3A63]">Employer Directory</CardTitle>
               <Badge className="bg-[#EBF3FF] text-[#1E56B3] hover:bg-[#EBF3FF] font-bold text-[10px] px-2 py-0.5 rounded-full border border-[#D0E2FF]/60 select-none">
-                {totalCount} Total
+                {totalCount} {statusFilter === "Pending" ? "Waitlisted" : "Total"}
               </Badge>
+            </div>
+            
+            <div className="flex bg-[#F1F5F9] p-0.5 rounded-xl border border-[#E2E8F0]">
+              <button
+                type="button"
+                onClick={() => { setStatusFilter("all"); setCurrentPage(1); }}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  statusFilter === "all" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                All Partners
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStatusFilter("Active"); setCurrentPage(1); }}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  statusFilter === "Active" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                Active
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStatusFilter("Pending"); setCurrentPage(1); }}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  statusFilter === "Pending" ? "bg-white text-[#EA580C] shadow-sm font-extrabold" : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                Waitlist (Pending)
+              </button>
             </div>
             
             {/* Export & Import actions */}

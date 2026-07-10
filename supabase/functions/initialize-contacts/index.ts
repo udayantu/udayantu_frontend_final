@@ -18,23 +18,10 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Check if table exists by trying to query it
-    const { error: checkError } = await supabaseClient
-      .from("contact_submissions")
-      .select("id", { count: "exact", head: true })
-      .limit(0);
-
-    if (!checkError) {
-      // Table already exists
-      return new Response(
-        JSON.stringify({ success: true, message: "Table already exists" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Create table using raw SQL query - stored procedures approach
+    // Create tables using raw SQL query - stored procedures approach
     const { data, error } = await supabaseClient.rpc("exec", {
       sql: `
+        -- Create contact submissions table
         CREATE TABLE IF NOT EXISTS contact_submissions (
           id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
           full_name varchar(255) NOT NULL,
@@ -56,13 +43,38 @@ serve(async (req) => {
         CREATE POLICY IF NOT EXISTS "Allow insert for all" ON contact_submissions
           FOR INSERT WITH CHECK (true);
 
-        CREATE POLICY IF NOT EXISTS "Allow read for admins" ON contact_submissions
-          FOR SELECT USING (
-            EXISTS (
-              SELECT 1 FROM user_roles ur 
-              WHERE ur.email = auth.email() AND ur.role = 'admin'
-            )
-          );
+        -- Create employers table
+        CREATE TABLE IF NOT EXISTS employers (
+          id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+          company_name text NOT NULL,
+          contact_name text NOT NULL,
+          email text NOT NULL UNIQUE,
+          phone text NOT NULL,
+          roles_needed text[] DEFAULT '{}',
+          hiring_timeline text,
+          tools_stack text,
+          cohort_size_estimate integer,
+          notes text,
+          designation text,
+          status text DEFAULT 'Pending' CHECK (status IN ('Active', 'Inactive', 'Pending')),
+          otp_code text,
+          otp_expires_at timestamp with time zone,
+          created_at timestamp with time zone DEFAULT now()
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_employers_email ON employers(email);
+        CREATE INDEX IF NOT EXISTS idx_employers_status ON employers(status);
+
+        ALTER TABLE employers ENABLE ROW LEVEL SECURITY;
+
+        CREATE POLICY IF NOT EXISTS "Allow insert for all employers" ON employers
+          FOR INSERT WITH CHECK (true);
+
+        CREATE POLICY IF NOT EXISTS "Allow select for all employers" ON employers
+          FOR SELECT USING (true);
+
+        CREATE POLICY IF NOT EXISTS "Allow update for all employers" ON employers
+          FOR UPDATE USING (true);
       `,
     });
 

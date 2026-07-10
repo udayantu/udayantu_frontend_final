@@ -12,9 +12,10 @@ const corsHeaders = {
 };
 
 interface WelcomeEmailRequest {
-  name: string;
+  name?: string;
   email: string;
-  company: string;
+  company?: string;
+  otp?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -23,10 +24,8 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { name, email, company }: WelcomeEmailRequest = await req.json();
+    const { name, email, company, otp }: WelcomeEmailRequest = await req.json();
 
-    // Security: Validate that this email was recently submitted to the employers table
-    // This prevents abuse of the endpoint for spam
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       console.error("Missing Supabase configuration");
       return new Response(
@@ -37,7 +36,71 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Check if employer record exists and was created within the last 5 minutes
+    if (otp) {
+      // Just check if the employer exists in the database
+      const { data: employer, error: dbError } = await supabase
+        .from("employers")
+        .select("email")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (dbError) {
+        console.error("Database error validating employer for OTP:", dbError.message);
+        return new Response(
+          JSON.stringify({ error: "Validation failed" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      if (!employer) {
+        console.warn("Rejected OTP request - no employer record found for:", email);
+        return new Response(
+          JSON.stringify({ error: "Employer not registered on waitlist" }),
+          { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      console.log("Validated employer, sending login OTP email to:", email);
+
+      const emailResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: "UdaYantu <onboarding@resend.dev>",
+          to: [email],
+          subject: "Your UdaYantu Employer Verification Code",
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 25px; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+              <h2 style="color: #0F172A; font-size: 20px; font-weight: 700; margin-bottom: 16px;">UdaYantu Employer Verification</h2>
+              <p style="color: #475569; font-size: 14px; line-height: 1.5; margin-bottom: 24px;">Please use the following verification code to sign into your administrative employer session. This code is valid for 10 minutes:</p>
+              <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 16px; text-align: center; margin-bottom: 24px;">
+                <span style="font-family: monospace; font-size: 32px; font-weight: 800; letter-spacing: 4px; color: #0EA5E9;">${otp}</span>
+              </div>
+              <p style="color: #94a3b8; font-size: 11px; line-height: 1.4; margin-top: 24px; border-t: 1px solid #f1f5f9; padding-top: 16px;">If you did not request this login attempt, please ignore this email or contact security support.</p>
+            </div>
+          `,
+        }),
+      });
+
+      if (!emailResponse.ok) {
+        const error = await emailResponse.json();
+        throw new Error(error.message || "Failed to send OTP email");
+      }
+
+      const result = await emailResponse.json();
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // Welcome email requires recent signup (last 5 minutes)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const { data: employer, error: dbError } = await supabase
       .from("employers")
@@ -73,6 +136,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "UdaYantu <onboarding@resend.dev>",
         to: [email],
+        bcc: ["udayantu10x@gmail.com"],
         subject: "Welcome to UdaYantu Employer Waitlist — Priority Access Confirmed",
         html: `
         <!DOCTYPE html>

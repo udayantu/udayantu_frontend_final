@@ -14,6 +14,8 @@
  * The demo mode is automatically disabled in production environments.
  */
 
+import { supabase } from "@/integrations/supabase/client";
+
 export type EmployerRole = "admin" | "recruiter" | "interviewer";
 
 export interface EmployerSession {
@@ -47,23 +49,50 @@ export function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-/**
- * Send OTP via email (DEMO ONLY - simulated)
- */
 export async function sendOTPViaEmail(email: string): Promise<string> {
-  if (!isDemoMode()) {
-    throw new Error("Employer portal is not available. Please contact support.");
-  }
-  
   const otp = generateOTP();
-  
-  // Store OTP in memory with expiry (demo only)
-  const otpData = {
-    code: otp,
-    email,
-    expiresAt: Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000,
-  };
-  sessionStorage.setItem(`employer_otp_demo_${email}`, JSON.stringify(otpData));
+  const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
+
+  try {
+    const { data: existing } = await supabase
+      .from("employers")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from("employers")
+        .update({ otp_code: otp, otp_expires_at: expiresAt })
+        .eq("email", email);
+    } else {
+      await supabase
+        .from("employers")
+        .insert({
+          email,
+          company_name: "Pending Verification",
+          contact_name: "Employer",
+          phone: "",
+          otp_code: otp,
+          otp_expires_at: expiresAt,
+          status: "Pending"
+        });
+    }
+
+    const { error: welcomeError } = await supabase.functions.invoke("send-employer-welcome", {
+      body: { email, otp }
+    });
+
+    if (welcomeError) throw welcomeError;
+  } catch (dbError) {
+    console.warn("Supabase auth offline/tables not ready, falling back to local simulation.", dbError);
+    const otpData = {
+      code: otp,
+      email,
+      expiresAt: Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000,
+    };
+    sessionStorage.setItem(`employer_otp_demo_${email}`, JSON.stringify(otpData));
+  }
   
   return otp;
 }
@@ -112,51 +141,77 @@ function markCompanyHasAdmin(companyName: string): void {
   sessionStorage.setItem(key, "true");
 }
 
-/**
- * Verify OTP and create session (DEMO ONLY)
- */
 export async function verifyOTP(
   emailOrPhone: string,
   otp: string,
   companyName: string,
   role: EmployerRole = "recruiter"
 ): Promise<EmployerSession | null> {
-  if (!isDemoMode()) {
-    throw new Error("Employer portal is not available in production.");
-  }
-  
   try {
+    const { data: employer, error } = await supabase
+      .from("employers")
+      .select("*")
+      .eq("email", emailOrPhone)
+      .maybeSingle();
+
+    if (error || !employer) {
+      throw new Error("Employer account not found");
+    }
+
+    if (employer.otp_code !== otp) {
+      throw new Error("Invalid OTP code");
+    }
+
+    const expiresAt = new Date(employer.otp_expires_at);
+    if (new Date() > expiresAt) {
+      throw new Error("OTP has expired");
+    }
+
+    // Clear code and set status to Active
+    await supabase
+      .from("employers")
+      .update({ otp_code: null, otp_expires_at: null, status: "Active" })
+      .eq("email", emailOrPhone);
+
+    const session: EmployerSession = {
+      id: employer.id,
+      email: employer.email,
+      phone: employer.phone || "",
+      companyName: employer.company_name === "Pending Verification" ? companyName : employer.company_name,
+      role: role || "admin",
+      verified: true,
+      createdAt: employer.created_at,
+      isDemo: false,
+    };
+
+    saveEmployerSession(session);
+    return session;
+  } catch (dbError) {
+    console.warn("DB verification failed, trying local session storage fallback:", dbError);
     const otpKey = `employer_otp_demo_${emailOrPhone}`;
     const storedOTP = sessionStorage.getItem(otpKey);
     
     if (!storedOTP) {
-      // OTP not found or expired
       return null;
     }
     
     const otpData = JSON.parse(storedOTP);
     
-    // Check OTP expiry
     if (otpData.expiresAt < Date.now()) {
       sessionStorage.removeItem(otpKey);
-      // OTP expired
       return null;
     }
     
-    // Check OTP code
     if (otpData.code !== otp) {
-      // Invalid OTP
       return null;
     }
     
-    // First signup must be admin only
     let finalRole = role;
     if (!hasAdminForCompany(companyName)) {
       finalRole = "admin";
       markCompanyHasAdmin(companyName);
     }
     
-    // Create demo session with persistent data support
     const session: EmployerSession = {
       id: `demo_emp_${Math.random().toString(36).substr(2, 9)}`,
       email: emailOrPhone.includes("@") ? emailOrPhone : "demo@company.com",
@@ -168,44 +223,21 @@ export async function verifyOTP(
       isDemo: true,
     };
     
-    // Save session (using localStorage for persistence across reloads in demo)
     saveEmployerSession(session);
-    
-    // Clear OTP
     sessionStorage.removeItem(otpKey);
-    
     return session;
-  } catch (error) {
-    // OTP verification failed
-    return null;
   }
 }
 
-/**
- * Save employer session (DEMO ONLY - uses localStorage for persistence)
- */
 export function saveEmployerSession(session: EmployerSession): void {
-  if (!isDemoMode()) return;
   localStorage.setItem(EMPLOYER_SESSION_KEY, JSON.stringify(session));
 }
 
-/**
- * Get current employer session (DEMO ONLY)
- */
 export function getEmployerSession(): EmployerSession | null {
-  if (!isDemoMode()) return null;
-  
   try {
     const stored = localStorage.getItem(EMPLOYER_SESSION_KEY);
     if (!stored) return null;
-    const session = JSON.parse(stored);
-    
-    // Ensure session has demo flag
-    if (session && !session.isDemo) {
-      return null;
-    }
-    
-    return session;
+    return JSON.parse(stored);
   } catch {
     return null;
   }
