@@ -158,20 +158,13 @@ export default function AdminDashboard() {
           {/* Code grids background detail */}
           <div className="absolute inset-0 bg-[radial-gradient(#f97316_1px,transparent_1px)] [background-size:16px_16px] opacity-[0.03] pointer-events-none" />
           
-          {/* Header: Logo, Brand name, and Subtitle */}
-          <div className="relative z-10 flex items-center gap-2 select-none">
-            <img 
-              src={logoImage} 
-              alt="UdaYantu Logo" 
-              className="h-20 w-auto object-contain" 
-            />
-            <div>
-              <div className="text-2xl font-black tracking-tight leading-tight">
-                Uda<span className="text-[#EA580C]">Yantu</span>
-              </div>
-              <div className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">
-                Admin Portal
-              </div>
+          {/* Header: Brand name and Subtitle */}
+          <div className="relative z-10 select-none">
+            <div className="text-2xl font-black tracking-tight leading-tight">
+              Uda<span className="text-[#EA580C]">Yantu</span>
+            </div>
+            <div className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">
+              Admin Portal
             </div>
           </div>
 
