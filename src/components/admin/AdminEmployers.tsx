@@ -154,14 +154,13 @@ const MOCK_EMPLOYERS: Employer[] = [
 
 const ITEMS_PER_PAGE = 5;
 
-// Helper to parse the custom fields from Supabase notes column
 const parseEmployerNotes = (employer: any): Employer => {
   let parsed = {
     city: "Mumbai",
     state: "Maharashtra",
     industry: "IT Services",
-    openings_count: 10,
-    status: "Active" as const,
+    openings_count: 0,
+    status: employer.status || "Pending",
     last_activity: "Just now"
   };
   
@@ -180,21 +179,21 @@ const parseEmployerNotes = (employer: any): Employer => {
     // Guess defaults based on name to keep table filled
     const name = employer.company_name?.toLowerCase() || "";
     if (name.includes("infosys")) {
-      parsed = { city: "Bengaluru", state: "Karnataka", industry: "IT Services", openings_count: 35, status: "Active", last_activity: "5 hours ago" };
+      parsed = { city: "Bengaluru", state: "Karnataka", industry: "IT Services", openings_count: 35, status: employer.status || "Active", last_activity: "5 hours ago" };
     } else if (name.includes("wipro")) {
-      parsed = { city: "Bengaluru", state: "Karnataka", industry: "IT Services", openings_count: 22, status: "Active", last_activity: "1 day ago" };
+      parsed = { city: "Bengaluru", state: "Karnataka", industry: "IT Services", openings_count: 22, status: employer.status || "Active", last_activity: "1 day ago" };
     } else if (name.includes("hdfc")) {
-      parsed = { city: "Mumbai", state: "Maharashtra", industry: "Banking", openings_count: 50, status: "Active", last_activity: "2 days ago" };
+      parsed = { city: "Mumbai", state: "Maharashtra", industry: "Banking", openings_count: 50, status: employer.status || "Active", last_activity: "2 days ago" };
     } else if (name.includes("accenture")) {
-      parsed = { city: "Pune", state: "Maharashtra", industry: "IT Services", openings_count: 31, status: "Active", last_activity: "3 days ago" };
+      parsed = { city: "Pune", state: "Maharashtra", industry: "IT Services", openings_count: 31, status: employer.status || "Active", last_activity: "3 days ago" };
     } else if (name.includes("tata") || name.includes("tcs")) {
-      parsed = { city: "Mumbai", state: "Maharashtra", industry: "IT Services", openings_count: 28, status: "Active", last_activity: "2 hours ago" };
+      parsed = { city: "Mumbai", state: "Maharashtra", industry: "IT Services", openings_count: 28, status: employer.status || "Active", last_activity: "2 hours ago" };
     }
   }
 
   return {
-    ...employer,
-    ...parsed
+    ...parsed,
+    ...employer
   };
 };
 
@@ -212,13 +211,12 @@ export function AdminEmployers() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   
-  // Stats
   const [stats, setStats] = useState<AnalyticsStats>({
-    total: 142,
-    active: 48,
-    newThisWeek: 6,
-    openPositions: 237,
-    placementsThisMonth: 34
+    total: 0,
+    active: 0,
+    newThisWeek: 0,
+    openPositions: 0,
+    placementsThisMonth: 0
   });
 
   // Modal dialog states
@@ -689,6 +687,70 @@ export function AdminEmployers() {
         return "bg-slate-50 text-slate-700 border-slate-200";
     }
   };
+
+  // Dynamic metrics calculation for bottom row widgets
+  const topHirers = [...employers]
+    .filter(e => (e.openings_count || 0) > 0)
+    .sort((a, b) => (b.openings_count || 0) - (a.openings_count || 0))
+    .slice(0, 3);
+
+  // Industry distribution calculations
+  const totalWithIndustry = employers.length || 1;
+  const industryStats = employers.reduce((acc, e) => {
+    const ind = e.industry || "IT Services";
+    acc[ind] = (acc[ind] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const sortedIndustries = Object.entries(industryStats)
+    .map(([name, count]) => ({
+      name,
+      count,
+      percentage: Math.round((count / totalWithIndustry) * 100)
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  const industryColorMap: Record<string, string> = {
+    "IT Services": "#3B82F6",
+    "Banking": "#10B981",
+    "Consulting": "#F59E0B",
+    "Education": "#8B5CF6",
+    "Others": "#64748B",
+  };
+
+  // Registration trends coordinates
+  const nowTime = new Date().getTime();
+  const intervals = Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(nowTime - (4 - i) * 7 * 24 * 60 * 60 * 1000);
+    return {
+      label: d.toLocaleDateString("en-IN", { day: 'numeric', month: 'short' }),
+      count: employers.filter(e => new Date(e.created_at) <= d).length
+    };
+  });
+
+  const maxVal = Math.max(1, ...intervals.map(i => i.count));
+  const points = intervals.map((interval, i) => {
+    const x = 20 + i * 65;
+    const y = 100 - (interval.count / maxVal) * 70;
+    return `${x},${y}`;
+  }).join(" ");
+
+  const fillPoints = `20,100 ${points} 280,100`;
+
+  let cumulativePercent = 0;
+  const industryCircles = sortedIndustries.slice(0, 4).map((ind, index) => {
+    const color = industryColorMap[ind.name] || "#64748B";
+    const dashArray = `${(ind.percentage / 100) * 376.99} 376.99`;
+    const dashOffset = `-${(cumulativePercent / 100) * 376.99}`;
+    cumulativePercent += ind.percentage;
+    return {
+      name: ind.name,
+      percentage: ind.percentage,
+      color,
+      dashArray,
+      dashOffset
+    };
+  });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -1163,50 +1225,39 @@ export function AdminEmployers() {
           </div>
           
           <div className="space-y-4">
-            {/* Top Company 1 */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center text-xs font-bold">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-slate-400 font-extrabold">1</span>
-                  <div className="w-6 h-6 rounded-lg bg-red-50 text-red-600 flex items-center justify-center font-bold text-[10px]">TCS</div>
-                  <span className="text-slate-700">TCS</span>
-                </div>
-                <span className="text-[#1E3A63] font-extrabold">28 Openings</span>
+            {topHirers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center text-slate-400">
+                <Building2 className="w-8 h-8 stroke-1 mb-2 text-slate-300" />
+                <p className="text-xs font-semibold">No active hiring campaigns</p>
+                <p className="text-[10px] text-slate-400">Add openings to start tracking</p>
               </div>
-              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                <div className="bg-[#1E56B3] h-full rounded-full" style={{ width: "56%" }}></div>
-              </div>
-            </div>
-
-            {/* Top Company 2 */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center text-xs font-bold">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-slate-400 font-extrabold">2</span>
-                  <div className="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[10px]">INF</div>
-                  <span className="text-slate-700">Infosys</span>
-                </div>
-                <span className="text-[#1E3A63] font-extrabold">35 Openings</span>
-              </div>
-              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                <div className="bg-[#1E56B3] h-full rounded-full" style={{ width: "70%" }}></div>
-              </div>
-            </div>
-
-            {/* Top Company 3 */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center text-xs font-bold">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-slate-400 font-extrabold">3</span>
-                  <div className="w-6 h-6 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-[10px]">HDF</div>
-                  <span className="text-slate-700">HDFC Bank</span>
-                </div>
-                <span className="text-[#1E3A63] font-extrabold">50+ Openings</span>
-              </div>
-              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                <div className="bg-[#1E56B3] h-full rounded-full" style={{ width: "100%" }}></div>
-              </div>
-            </div>
+            ) : (
+              topHirers.map((emp, index) => {
+                const colors = [
+                  { bg: "bg-red-50 text-red-600", fill: "#EF4444" },
+                  { bg: "bg-blue-50 text-blue-600", fill: "#3B82F6" },
+                  { bg: "bg-purple-50 text-purple-600", fill: "#8B5CF6" }
+                ];
+                const c = colors[index % colors.length];
+                return (
+                  <div key={emp.id} className="space-y-1.5">
+                    <div className="flex justify-between items-center text-xs font-bold">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 font-extrabold">{index + 1}</span>
+                        <div className={`w-6 h-6 rounded-lg ${c.bg} flex items-center justify-center font-bold text-[10px]`}>
+                          {emp.company_name.substring(0, 3).toUpperCase()}
+                        </div>
+                        <span className="text-slate-700 truncate max-w-[120px]">{emp.company_name}</span>
+                      </div>
+                      <span className="text-[#1E3A63] font-extrabold">{emp.openings_count} Openings</span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                      <div className="bg-[#1E56B3] h-full rounded-full" style={{ width: `${Math.min(100, ((emp.openings_count || 1) / 50) * 100)}%` }}></div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </Card>
 
@@ -1224,34 +1275,31 @@ export function AdminEmployers() {
               <line x1="20" y1="60" x2="280" y2="60" stroke="#F1F5F9" strokeWidth="1" strokeDasharray="3 3" />
               <line x1="20" y1="100" x2="280" y2="100" stroke="#F1F5F9" strokeWidth="1" />
 
-              <path d="M 20,80 L 85,55 L 150,68 L 215,20 L 280,38 L 280,100 L 20,100 Z" fill="rgba(59, 130, 246, 0.05)" />
-              <path d="M 20,95 L 85,88 L 150,91 L 215,70 L 280,78 L 280,100 L 20,100 Z" fill="rgba(16, 185, 129, 0.05)" />
+              <path d={`M 20,100 L ${points} L 280,100 Z`} fill="rgba(59, 130, 246, 0.05)" />
+              <path d={`M 20,100 L ${points}`} fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" />
 
-              <path d="M 20,95 L 85,88 L 150,91 L 215,70 L 280,78" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
-              <path d="M 20,80 L 85,55 L 150,68 L 215,20 L 280,38" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" />
-
-              <circle cx="215" cy="20" r="3.5" fill="#3B82F6" stroke="#FFFFFF" strokeWidth="1.5" />
-              <circle cx="215" cy="70" r="3.5" fill="#10B981" stroke="#FFFFFF" strokeWidth="1.5" />
-
-              <text x="215" y="12" font-size="7" font-weight="bold" fill="#1E3A63" text-anchor="middle">22 May</text>
+              {intervals.map((interval, i) => {
+                const x = 20 + i * 65;
+                const y = 100 - (interval.count / maxVal) * 70;
+                return (
+                  <g key={i}>
+                    <circle cx={x} cy={y} r="3" fill="#3B82F6" stroke="#FFFFFF" strokeWidth="1" />
+                    <text x={x} y={y - 8} font-size="6" font-weight="bold" fill="#1E3A63" text-anchor="middle">{interval.count}</text>
+                  </g>
+                );
+              })}
             </svg>
             
             <div className="flex justify-between text-[9px] text-slate-400 font-bold px-2">
-              <span>1 May</span>
-              <span>8 May</span>
-              <span>15 May</span>
-              <span>22 May</span>
-              <span>29 May</span>
+              {intervals.map((interval, i) => (
+                <span key={i}>{interval.label}</span>
+              ))}
             </div>
             
             <div className="flex justify-center gap-4 text-[9px] font-bold text-slate-500 pt-1 border-t border-slate-50">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6]"></span>
-                Openings
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
-                Placements
+                Total Registered
               </span>
             </div>
           </div>
@@ -1268,14 +1316,20 @@ export function AdminEmployers() {
             <div className="relative w-28 h-28 flex items-center justify-center flex-shrink-0">
               <svg className="w-full h-full" viewBox="0 0 200 200">
                 <circle cx="100" cy="100" r="60" fill="none" stroke="#F8FAFC" strokeWidth="22" />
-                <circle cx="100" cy="100" r="60" fill="none" stroke="#3B82F6" strokeWidth="22"
-                  strokeDasharray="256.36 376.99" strokeDashoffset="0" transform="rotate(-90 100 100)" />
-                <circle cx="100" cy="100" r="60" fill="none" stroke="#10B981" strokeWidth="22"
-                  strokeDasharray="75.4 376.99" strokeDashoffset="-256.36" transform="rotate(-90 100 100)" />
-                <circle cx="100" cy="100" r="60" fill="none" stroke="#F59E0B" strokeWidth="22"
-                  strokeDasharray="26.39 376.99" strokeDashoffset="-331.76" transform="rotate(-90 100 100)" />
-                <circle cx="100" cy="100" r="60" fill="none" stroke="#8B5CF6" strokeWidth="22"
-                  strokeDasharray="18.84 376.99" strokeDashoffset="-358.15" transform="rotate(-90 100 100)" />
+                {industryCircles.map((circle) => (
+                  <circle
+                    key={circle.name}
+                    cx="100"
+                    cy="100"
+                    r="60"
+                    fill="none"
+                    stroke={circle.color}
+                    strokeWidth="22"
+                    strokeDasharray={circle.dashArray}
+                    strokeDashoffset={circle.dashOffset}
+                    transform="rotate(-90 100 100)"
+                  />
+                ))}
               </svg>
               <div className="absolute flex flex-col items-center justify-center">
                 <span className="text-lg font-black text-[#1E3A63] leading-none">{stats.total}</span>
@@ -1283,23 +1337,22 @@ export function AdminEmployers() {
               </div>
             </div>
 
-            <div className="flex-1 space-y-1.5 text-[10px] font-bold text-slate-500">
-              <div className="flex justify-between items-center gap-1.5">
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6]"></span>IT Services</span>
-                <span className="text-slate-800 font-extrabold">68%</span>
-              </div>
-              <div className="flex justify-between items-center gap-1.5">
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>Banking</span>
-                <span className="text-slate-800 font-extrabold">20%</span>
-              </div>
-              <div className="flex justify-between items-center gap-1.5">
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span>Consulting</span>
-                <span className="text-slate-800 font-extrabold">7%</span>
-              </div>
-              <div className="flex justify-between items-center gap-1.5">
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#8B5CF6]"></span>Others</span>
-                <span className="text-slate-800 font-extrabold">5%</span>
-              </div>
+            <div className="flex-1 space-y-1.5 text-[10px] font-bold text-slate-500 overflow-y-auto max-h-[140px]">
+              {sortedIndustries.slice(0, 4).map((ind) => {
+                const color = industryColorMap[ind.name] || "#64748B";
+                return (
+                  <div key={ind.name} className="flex justify-between items-center gap-1.5">
+                    <span className="flex items-center gap-1 truncate max-w-[80px]">
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }}></span>
+                      {ind.name}
+                    </span>
+                    <span className="text-slate-800 font-extrabold">{ind.percentage}%</span>
+                  </div>
+                );
+              })}
+              {sortedIndustries.length === 0 && (
+                <p className="text-[10px] text-slate-400 text-center py-4">No data</p>
+              )}
             </div>
           </div>
         </Card>
