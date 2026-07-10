@@ -65,11 +65,11 @@ export const WhySection = memo(() => {
 
         {/* Phase 2: The 5-Pillar Trust Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          <Card className="text-center border-2 border-primary/20 hover:border-primary/40 transition-all bg-gradient-to-br from-secondary/10 to-secondary/5">
+          <Card className="text-center border-2 border-primary/20 hover:border-primary/40 transition-all">
             <CardContent className="pt-6">
               <Target className="w-12 h-12 text-secondary mx-auto mb-4" />
-              <h4 className="font-bold text-xl mb-3 text-primary">🎯 Job or Your Fee Back.</h4>
-              <p className="font-bold text-base text-primary mb-3 text-lg">
+              <h4 className="font-bold text-lg mb-2">🎯 Job or Your Fee Back.</h4>
+              <p className="font-bold text-base mb-3 text-lg">
                 नॉकरी नहीं मिली, तो रजिस्ट्रेशन फीस भी वापस।
               </p>
               <p className="text-sm text-muted-foreground">
