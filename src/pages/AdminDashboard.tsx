@@ -31,6 +31,7 @@ import { AdminTeachers } from "@/components/admin/AdminTeachers";
 import { AdminMentorSessions } from "@/components/admin/AdminMentorSessions";
 import { AdminCommunications } from "@/components/admin/AdminCommunications";
 import { AdminReports } from "@/components/admin/AdminReports";
+import AdminBlogs from "@/components/admin/AdminBlogs";
 import logoImage from "@/assets/udayantu-logo-uploaded.png";
 
 export default function AdminDashboard() {
@@ -204,6 +205,10 @@ export default function AdminDashboard() {
           <TabsTrigger value="communications" className="w-full justify-start text-left gap-2.5 px-3.5 py-2.5 rounded-xl text-[#A2B6CF] hover:text-white hover:bg-white/5 data-[state=active]:bg-[#FF5A1F] data-[state=active]:text-white transition-all text-xs font-semibold bg-transparent border-none" data-testid="tab-communications">
             <MessageSquare className="w-4.5 h-4.5" />
             Communications
+          </TabsTrigger>
+          <TabsTrigger value="blogs" className="w-full justify-start text-left gap-2.5 px-3.5 py-2.5 rounded-xl text-[#A2B6CF] hover:text-white hover:bg-white/5 data-[state=active]:bg-[#FF5A1F] data-[state=active]:text-white transition-all text-xs font-semibold bg-transparent border-none" data-testid="tab-blogs">
+            <BookOpen className="w-4.5 h-4.5" />
+            Blog Writing
           </TabsTrigger>
           <TabsTrigger value="settings" className="w-full justify-start text-left gap-2.5 px-3.5 py-2.5 rounded-xl text-[#A2B6CF] hover:text-white hover:bg-white/5 data-[state=active]:bg-[#FF5A1F] data-[state=active]:text-white transition-all text-xs font-semibold bg-transparent border-none" data-testid="tab-settings">
             <Settings className="w-4.5 h-4.5" />
@@ -423,6 +428,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="reports" className="mt-0 outline-none">
             <AdminReports />
+          </TabsContent>
+
+          <TabsContent value="blogs" className="mt-0 outline-none">
+            <AdminBlogs />
           </TabsContent>
         </div>
       </div>
