@@ -234,7 +234,7 @@ export default function AdminDashboard() {
         <TabsList className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-y-auto md:overflow-x-hidden p-3.5 h-auto md:flex-1 bg-transparent border-none text-left items-start justify-start select-none">
           <TabsTrigger value="overview" className="w-full justify-start text-left gap-2.5 px-3.5 py-2.5 rounded-xl text-[#A2B6CF] hover:text-white hover:bg-white/5 data-[state=active]:bg-[#FF5A1F] data-[state=active]:text-white transition-all text-xs font-semibold bg-transparent border-none" data-testid="tab-overview">
             <BarChart3 className="w-4.5 h-4.5" />
-            Overview
+            Dashboard
           </TabsTrigger>
           <TabsTrigger value="students" className="w-full justify-start text-left gap-2.5 px-3.5 py-2.5 rounded-xl text-[#A2B6CF] hover:text-white hover:bg-white/5 data-[state=active]:bg-[#FF5A1F] data-[state=active]:text-white transition-all text-xs font-semibold bg-transparent border-none" data-testid="tab-students">
             <Users className="w-4.5 h-4.5" />
