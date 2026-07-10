@@ -35,6 +35,7 @@ import { AdminCommunications } from "@/components/admin/AdminCommunications";
 import { AdminReports } from "@/components/admin/AdminReports";
 import AdminBlogs from "@/components/admin/AdminBlogs";
 import logoImage from "@/assets/udayantu-logo-uploaded.png";
+import logoIcon from "@/assets/udayantu-icon.svg";
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -158,11 +159,11 @@ export default function AdminDashboard() {
           <div className="absolute inset-0 bg-[radial-gradient(#f97316_1px,transparent_1px)] [background-size:16px_16px] opacity-[0.03] pointer-events-none" />
           
           {/* Header: Logo, Brand name, and Subtitle */}
-          <div className="relative z-10 flex items-center gap-3.5 select-none">
+          <div className="relative z-10 flex items-center gap-2 select-none">
             <img 
-              src={logoImage} 
-              alt="UdaYantu Logo" 
-              className="h-16 w-auto object-contain" 
+              src={logoIcon} 
+              alt="UdaYantu Logo Icon" 
+              className="h-12 w-auto object-contain" 
             />
             <div>
               <div className="text-2xl font-black tracking-tight leading-tight">
