@@ -161,9 +161,9 @@ export default function AdminDashboard() {
           {/* Header: Logo, Brand name, and Subtitle */}
           <div className="relative z-10 flex items-center gap-2 select-none">
             <img 
-              src={logoIcon} 
-              alt="UdaYantu Logo Icon" 
-              className="h-12 w-auto object-contain" 
+              src={logoImage} 
+              alt="UdaYantu Logo" 
+              className="h-20 w-auto object-contain" 
             />
             <div>
               <div className="text-2xl font-black tracking-tight leading-tight">
