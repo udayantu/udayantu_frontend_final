@@ -69,41 +69,63 @@ export async function getAllContacts(): Promise<ContactSubmission[]> {
   }
 }
 
-// Save new contact submission to localStorage
+import { supabase } from "@/integrations/supabase/client";
+
+// Save new contact submission to database & trigger admin notification
 export async function submitContact(
   submission: Omit<ContactSubmission, "id" | "created_at">
 ): Promise<ContactSubmission | null> {
   try {
-    if (typeof window === "undefined") {
-      throw new Error("Storage not available in this environment");
-    }
+    // 1. Save to Supabase database
+    const { data: dbData, error: dbError } = await supabase
+      .from("contact_submissions")
+      .insert({
+        full_name: submission.full_name,
+        mobile_number: submission.mobile_number,
+        email: submission.email,
+        role: submission.role,
+        city: submission.city,
+        note: submission.note,
+      })
+      .select()
+      .single();
 
-    // Generate ID and timestamp
-    const newContact: ContactSubmission = {
-      ...submission,
-      id: crypto.randomUUID(),
-      created_at: new Date().toISOString(),
-    };
+    if (dbError) throw dbError;
 
-    // Get existing submissions
-    const allContacts = await getAllContacts();
-
-    // Add new submission
-    allContacts.push(newContact);
-
-    // Save to localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(allContacts));
-
-    console.log("✅ Contact submission saved successfully", {
-      id: newContact.id,
-      email: newContact.email,
-      timestamp: newContact.created_at,
+    // 2. Trigger admin email notification via send-employer-welcome Edge Function
+    supabase.functions.invoke("send-employer-welcome", {
+      body: {
+        type: "contact",
+        name: submission.full_name,
+        email: submission.email,
+        mobile: submission.mobile_number,
+        role: submission.role,
+        city: submission.city || "N/A",
+        message: submission.note || "No message provided."
+      }
+    }).catch(mailErr => {
+      console.warn("BCC admin notification pending edge function release", mailErr);
     });
 
-    return newContact;
+    return dbData as ContactSubmission;
   } catch (error) {
-    console.error("Error saving contact:", error);
-    throw new Error("Failed to save contact submission. Please try again.");
+    console.error("Database save failed, using local fallback:", error);
+    
+    // Local storage fallback if offline/disconnected
+    try {
+      const newContact: ContactSubmission = {
+        ...submission,
+        id: crypto.randomUUID(),
+        created_at: new Date().toISOString(),
+      };
+
+      const allContacts = await getAllContacts();
+      allContacts.push(newContact);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allContacts));
+      return newContact;
+    } catch (fallbackError) {
+      throw new Error("Failed to save contact submission. Please try again.");
+    }
   }
 }
 

@@ -16,6 +16,11 @@ interface WelcomeEmailRequest {
   email: string;
   company?: string;
   otp?: string;
+  type?: "welcome" | "otp" | "contact";
+  mobile?: string;
+  role?: string;
+  city?: string;
+  message?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -24,7 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { name, email, company, otp }: WelcomeEmailRequest = await req.json();
+    const { name, email, company, otp, type, mobile, role, city, message }: WelcomeEmailRequest = await req.json();
 
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       console.error("Missing Supabase configuration");
@@ -35,6 +40,70 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Handle Contact Us submission email notification
+    if (type === "contact") {
+      console.log("Sending contact us notification email to admin");
+
+      const emailResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: "UdaYantu Portal <onboarding@resend.dev>",
+          to: ["udayantu10x@gmail.com"],
+          subject: `New Contact Inquiry: ${name || 'Inquirer'} (${role || 'Others'})`,
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 25px; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+              <h2 style="color: #1E3A63; font-size: 20px; font-weight: 700; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 20px;">New Contact Inquiry Received</h2>
+              <table style="width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; margin-bottom: 20px;">
+                <tr>
+                  <th style="padding: 8px 0; color: #475569; width: 120px;">Full Name:</th>
+                  <td style="padding: 8px 0; color: #0F172A; font-weight: 600;">${name || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <th style="padding: 8px 0; color: #475569;">Email Address:</th>
+                  <td style="padding: 8px 0; color: #0EA5E9; font-weight: 600;">${email}</td>
+                </tr>
+                <tr>
+                  <th style="padding: 8px 0; color: #475569;">Mobile Number:</th>
+                  <td style="padding: 8px 0; color: #0F172A; font-weight: 600;">${mobile || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <th style="padding: 8px 0; color: #475569;">Role/Profile:</th>
+                  <td style="padding: 8px 0; color: #0F172A; text-transform: capitalize;">${role || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <th style="padding: 8px 0; color: #475569;">City:</th>
+                  <td style="padding: 8px 0; color: #0F172A;">${city || 'N/A'}</td>
+                </tr>
+              </table>
+              <div style="background-color: #f8fafc; border-left: 4px solid #1E3A63; padding: 16px; border-radius: 4px; margin-bottom: 20px;">
+                <p style="color: #475569; font-size: 13px; font-weight: 600; margin-top: 0; margin-bottom: 8px;">Message:</p>
+                <p style="color: #0F172A; font-size: 14px; line-height: 1.6; margin: 0; white-space: pre-wrap;">${message || 'No message provided.'}</p>
+              </div>
+              <p style="color: #94a3b8; font-size: 11px; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 12px;">This inquiry was sent from the Contact Us form on udayantu.com.</p>
+            </div>
+          `,
+        }),
+      });
+
+      if (!emailResponse.ok) {
+        const error = await emailResponse.json();
+        throw new Error(error.message || "Failed to send admin contact email");
+      }
+
+      const result = await emailResponse.json();
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
+    }
 
     if (otp) {
       // Just check if the employer exists in the database
