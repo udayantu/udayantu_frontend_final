@@ -5,6 +5,7 @@ import { memo, useState } from "react";
 import { AuthModal } from "./AuthModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const steps = [
   {
@@ -40,20 +41,32 @@ const steps = [
 ];
 
 const StepCard = memo(({ step, index }: { step: typeof steps[0]; index: number }) => (
-  <Card className="relative border border-border hover:border-primary/40 hover:shadow-card-hover transition-all duration-300 group h-full bg-card">
-    <CardContent className="pt-8 pb-6 px-5 text-center">
-      <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-xl bg-primary/8 mb-4 group-hover:bg-primary/15 transition-all duration-300">
-        <step.icon className="w-8 h-8 text-primary group-hover:scale-110 transition-transform duration-300" />
-        <div className="absolute -top-2 -right-2 w-7 h-7 rounded-lg bg-secondary text-secondary-foreground flex items-center justify-center text-xs font-bold shadow-md">
-          {step.number}
+  <motion.div
+    initial={{ opacity: 0, y: 30 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-50px" }}
+    transition={{ 
+      duration: 0.5, 
+      delay: index * 0.1,
+      ease: [0.25, 0.46, 0.45, 0.94]
+    }}
+    className="h-full"
+  >
+    <Card className="relative border border-border/40 hover:border-primary/30 shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-[0_15px_30px_rgba(0,0,0,0.05)] transition-all duration-500 group h-full bg-card/80 backdrop-blur-sm rounded-2xl overflow-hidden">
+      <CardContent className="pt-8 pb-6 px-5 text-center flex flex-col h-full items-center relative z-10">
+        <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/5 mb-6 group-hover:bg-primary/10 transition-all duration-500 shadow-inner">
+          <step.icon className="w-8 h-8 text-primary group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500" />
+          <div className="absolute -top-2.5 -right-2.5 w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center text-xs font-black shadow-[0_4px_10px_rgba(255,90,31,0.3)] border-2 border-background">
+            {step.number}
+          </div>
         </div>
-      </div>
-      <h3 className="font-heading text-lg md:text-xl font-bold mb-2 text-foreground">{step.title}</h3>
-      <p className="text-sm text-muted-foreground leading-relaxed">
-        {step.description}
-      </p>
-    </CardContent>
-  </Card>
+        <h3 className="font-heading text-base md:text-lg font-bold mb-2.5 text-foreground group-hover:text-primary transition-colors duration-300">{step.title}</h3>
+        <p className="text-xs md:text-sm text-muted-foreground leading-relaxed flex-grow">
+          {step.description}
+        </p>
+      </CardContent>
+    </Card>
+  </motion.div>
 ));
 
 StepCard.displayName = "StepCard";
@@ -81,7 +94,7 @@ export const HowItWorksSection = memo(() => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 relative">
           {/* Connection lines for desktop */}
-          <div className="hidden lg:block absolute top-20 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent -z-10" />
+          <div className="hidden lg:block absolute top-20 left-[12%] right-[12%] h-[2px] bg-gradient-to-r from-primary/10 via-primary/45 to-primary/10 -z-10" />
           
           {steps.map((step, index) => (
             <StepCard key={step.number} step={step} index={index} />
