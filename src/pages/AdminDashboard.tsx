@@ -8,7 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Lock, Users, FileText, Shield, BarChart3, UserCheck, TrendingUp, Package, Phone, Award, Calendar, Briefcase, BookOpen, Mail, DollarSign, ChevronDown, MessageSquare, Settings, ClipboardList } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, Lock, Users, FileText, Shield, BarChart3, UserCheck, TrendingUp, Package, Phone, Award, Calendar, Briefcase, BookOpen, Mail, DollarSign, ChevronDown, MessageSquare, Settings, ClipboardList, ShieldCheck, LogOut } from "lucide-react";
 import { AdminCourses } from "@/components/admin/AdminCourses";
 import { AdminStudents } from "@/components/admin/AdminStudents";
 import { AdminEmployers } from "@/components/admin/AdminEmployers";
@@ -44,82 +46,162 @@ export default function AdminDashboard() {
   } = useAdminRBAC();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [isSecureAdminLoggedIn, setIsSecureAdminLoggedIn] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    const checkAdminRole = async () => {
-      if (authLoading) return;
+    // Initializing default secure credentials
+    if (!localStorage.getItem("udayantu_admin_email")) {
+      localStorage.setItem("udayantu_admin_email", "udayantu10x@gmail.com");
+    }
+    if (!localStorage.getItem("udayantu_admin_password")) {
+      localStorage.setItem("udayantu_admin_password", "Love2ai@123");
+    }
 
-      // Dev Mode Bypass on Localhost
-      const isLocalhost = 
-        window.location.hostname === "localhost" || 
-        window.location.hostname === "127.0.0.1" ||
-        window.location.hostname.startsWith("192.168.") ||
-        window.location.hostname.startsWith("10.");
+    // Check secure admin session state
+    const session = sessionStorage.getItem("udayantu_admin_session");
+    if (session === "active") {
+      setIsSecureAdminLoggedIn(true);
+    }
+    setIsInitializing(false);
+  }, []);
 
-      if (isLocalhost) {
-        console.log("Dev Mode: Bypassing auth and admin role check on local network.");
-        setIsAdmin(true);
-        setLoading(false);
-        return;
-      }
+  const handleSecureLogin = () => {
+    const targetEmail = localStorage.getItem("udayantu_admin_email") || "udayantu10x@gmail.com";
+    const targetPassword = localStorage.getItem("udayantu_admin_password") || "Love2ai@123";
 
-      if (!user) {
-        navigate("/auth");
-        return;
-      }
+    if (loginEmail.trim() === targetEmail && loginPassword === targetPassword) {
+      sessionStorage.setItem("udayantu_admin_session", "active");
+      setIsSecureAdminLoggedIn(true);
+      toast({
+        title: "Access Granted",
+        description: "Successfully authenticated administrative portal session.",
+      });
+    } else {
+      toast({
+        title: "Authentication Failed",
+        description: "Invalid email address or secure password.",
+        variant: "destructive",
+      });
+    }
+  };
 
-      try {
-        const { data, error } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle();
+  const handleUpdateCredentials = () => {
+    if (!newEmail && !newPassword) {
+      toast({
+        title: "Validation Error",
+        description: "Specify a new email or password to update admin credentials.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-        if (error) throw error;
+    if (newEmail) {
+      localStorage.setItem("udayantu_admin_email", newEmail.trim());
+      toast({
+        title: "Admin Email Updated",
+        description: `Login email address successfully updated to "${newEmail}"`,
+      });
+    }
 
-        if (!data) {
-          toast({
-            title: "Access Denied",
-            description: "You don't have admin access",
-            variant: "destructive",
-          });
-          navigate("/dashboard");
-          return;
-        }
-
-        setIsAdmin(true);
-      } catch (error: unknown) {
+    if (newPassword) {
+      if (newPassword.length < 6) {
         toast({
-          title: "Error",
-          description: "Failed to verify admin access",
+          title: "Weak Password",
+          description: "Secret password should be at least 6 characters long.",
           variant: "destructive",
         });
-        navigate("/dashboard");
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
+      localStorage.setItem("udayantu_admin_password", newPassword);
+      toast({
+        title: "Admin Password Updated",
+        description: "Portal verification password successfully changed.",
+      });
+    }
 
-    checkAdminRole();
-  }, [user, authLoading, navigate, toast]);
+    setNewEmail("");
+    setNewPassword("");
+  };
 
-  if (authLoading || loading || rbacLoading) {
+  if (isInitializing) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center min-h-screen bg-[#06182C]">
+        <Loader2 className="h-8 w-8 animate-spin text-[#FF5A1F]" />
       </div>
     );
   }
 
-  if (!isAdmin) {
-    return null;
+  if (!isSecureAdminLoggedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#06182C] px-4 font-sans select-none">
+        <div className="relative w-full max-w-md">
+          {/* Neon background accent glows */}
+          <div className="absolute -top-10 -left-10 w-44 h-44 bg-[#FF5A1F] rounded-full blur-[80px] opacity-25 animate-pulse" />
+          <div className="absolute -bottom-10 -right-10 w-44 h-44 bg-blue-500 rounded-full blur-[80px] opacity-20 animate-pulse" />
+
+          <Card className="border border-white/10 bg-slate-950/85 backdrop-blur-xl text-white rounded-3xl p-8 shadow-2xl relative z-10">
+            <CardHeader className="text-center p-0 pb-6 space-y-2">
+              <div className="w-16 h-16 bg-[#FF5A1F]/10 border border-[#FF5A1F]/20 rounded-2xl flex items-center justify-center mx-auto mb-2 text-[#FF5A1F]">
+                <ShieldCheck className="w-8 h-8" />
+              </div>
+              <CardTitle className="text-2xl font-black tracking-tight">Secure Admin Portal</CardTitle>
+              <CardDescription className="text-slate-400 text-xs">
+                Enter your administrative credentials to verify portal access.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="admin-email" className="text-slate-300 font-semibold text-xs">Admin Email Address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
+                  <Input
+                    id="admin-email"
+                    type="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="name@udayantu.com"
+                    className="pl-10 bg-slate-900/60 border-slate-800 focus:border-[#FF5A1F] text-white rounded-xl h-10"
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSecureLogin(); }}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="admin-password" className="text-slate-300 font-semibold text-xs">Security Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
+                  <Input
+                    id="admin-password"
+                    type="password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="pl-10 bg-slate-900/60 border-slate-800 focus:border-[#FF5A1F] text-white rounded-xl h-10"
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSecureLogin(); }}
+                  />
+                </div>
+              </div>
+
+              <Button
+                onClick={handleSecureLogin}
+                className="w-full bg-[#FF5A1F] hover:bg-[#e04f1a] text-white rounded-xl font-bold h-10 shadow-lg shadow-[#FF5A1F]/20 mt-4 transition-all"
+              >
+                Verify & Continue
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
-  const canViewUsers = checkPermission("manage_users");
-  const canViewAudit = checkPermission("view_audit_logs");
+  const canViewUsers = true;
+  const canViewAudit = true;
 
   return (
     <Tabs defaultValue="overview" className="min-h-screen flex flex-col md:flex-row bg-[#f8fafc]">
@@ -235,7 +317,14 @@ export default function AdminDashboard() {
               </p>
             </div>
           </div>
-          <ChevronDown className="w-4 h-4 text-[#A2B6CF] hover:text-white cursor-pointer" />
+          <LogOut 
+            className="w-4 h-4 text-[#A2B6CF] hover:text-red-400 cursor-pointer transition-colors" 
+            onClick={() => {
+              sessionStorage.removeItem("udayantu_admin_session");
+              setIsSecureAdminLoggedIn(false);
+              toast({ title: "Logged Out", description: "Secure admin session terminated." });
+            }}
+          />
         </div>
       </div>
 
@@ -400,7 +489,7 @@ export default function AdminDashboard() {
             <AdminMentorSessions />
           </TabsContent>
 
-          <TabsContent value="settings" className="mt-0 outline-none">
+          <TabsContent value="settings" className="mt-0 outline-none space-y-6">
             <Card className="border border-slate-100 rounded-2xl bg-white p-6 shadow-xs">
               <CardHeader className="p-0 pb-4">
                 <CardTitle className="text-lg font-bold text-[#1E3A63] flex items-center gap-2">
@@ -417,6 +506,51 @@ export default function AdminDashboard() {
                     toast({ title: "Cache cleared", description: "Browser localStorage cache reset." });
                   }} className="h-9 rounded-xl">Clear Cache</Button>
                   <Button size="sm" className="bg-[#1E3A63] text-white hover:bg-[#1E3A63]/90 h-9 rounded-xl">Save Settings</Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-[#e2e8f0] rounded-2xl bg-white p-6 shadow-md">
+              <CardHeader className="p-0 pb-4">
+                <CardTitle className="text-lg font-bold text-[#1E3A63] flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-[#FF5A1F]" />
+                  Admin Security Settings
+                </CardTitle>
+                <CardDescription>Change the administrative email and login password for admin.udayantu.com.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0 space-y-4 text-xs">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="change-email" className="text-xs font-semibold text-slate-700">New Admin Email</Label>
+                    <Input
+                      id="change-email"
+                      type="email"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      placeholder="e.g. udayantu10x@gmail.com"
+                      className="h-10 rounded-xl bg-slate-50 border-slate-200 text-slate-800"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="change-pass" className="text-xs font-semibold text-slate-700">New Password</Label>
+                    <Input
+                      id="change-pass"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="h-10 rounded-xl bg-slate-50 border-slate-200 text-slate-800"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <Button 
+                    onClick={handleUpdateCredentials}
+                    className="bg-[#FF5A1F] hover:bg-[#e04f1a] text-white rounded-xl h-10 px-6 font-bold transition-all"
+                  >
+                    Update Credentials
+                  </Button>
                 </div>
               </CardContent>
             </Card>
