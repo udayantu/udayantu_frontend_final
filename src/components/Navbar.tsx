@@ -263,54 +263,6 @@ export const Navbar = () => {
         />
       </nav>
 
-      {/* Floating Bottom Mobile Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background/90 backdrop-blur-xl border-t border-border/60 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.06)]">
-        <div className="grid grid-cols-4 h-16 max-w-md mx-auto items-center">
-          {/* Tab 1: Home */}
-          <button 
-            onClick={() => navigate("/")}
-            className={`flex flex-col items-center justify-center gap-1.5 transition-colors focus:outline-none ${
-              location.pathname === "/" && activeSection !== "roles" ? "text-primary" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Home className="w-5.5 h-5.5" />
-            <span className="text-[10px] font-bold tracking-tight">Home</span>
-          </button>
-
-          {/* Tab 2: Programs */}
-          <button 
-            onClick={() => scrollToSection("roles")}
-            className={`flex flex-col items-center justify-center gap-1.5 transition-colors focus:outline-none ${
-              location.pathname === "/" && activeSection === "roles" ? "text-primary" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <BookOpen className="w-5.5 h-5.5" />
-            <span className="text-[10px] font-bold tracking-tight">Programs</span>
-          </button>
-
-          {/* Tab 3: Employers */}
-          <button 
-            onClick={() => navigate("/employers")}
-            className={`flex flex-col items-center justify-center gap-1.5 transition-colors focus:outline-none ${
-              location.pathname === "/employers" ? "text-primary" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Building2 className="w-5.5 h-5.5" />
-            <span className="text-[10px] font-bold tracking-tight">Employers</span>
-          </button>
-
-          {/* Tab 4: Dashboard/Auth */}
-          <button 
-            onClick={handleDashboardClick}
-            className={`flex flex-col items-center justify-center gap-1.5 transition-colors focus:outline-none ${
-              location.pathname === "/dashboard" || location.pathname === "/payment" ? "text-primary" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <User className="w-5.5 h-5.5" />
-            <span className="text-[10px] font-bold tracking-tight">{user ? "Dashboard" : "Sign In"}</span>
-          </button>
-        </div>
-      </div>
     </>
   );
 };
