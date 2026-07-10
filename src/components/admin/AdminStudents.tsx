@@ -263,7 +263,7 @@ export function AdminStudents() {
 
       const { data, error, count } = await query.range(from, to);
 
-      if (error || !data || data.length === 0) throw new Error("No database records found");
+      if (error) throw error;
       setStudents(data || []);
       setFilteredStudents(data || []);
       setTotalCount(count || 0);
@@ -292,14 +292,9 @@ export function AdminStudents() {
         thisMonth: monthData.count || 0,
       });
     } catch (error: unknown) {
-      // Local Storage Fallback
+      console.warn("Could not load students from live database. Initializing clean/empty state.");
       const localData = localStorage.getItem("udayantu_students");
       let allStudents = localData ? JSON.parse(localData) : [];
-      if (allStudents.length === 0) {
-        allStudents = MOCK_STUDENTS;
-        localStorage.setItem("udayantu_students", JSON.stringify(MOCK_STUDENTS));
-      }
-
       let results = [...allStudents];
 
       // Apply filters
@@ -476,7 +471,7 @@ export function AdminStudents() {
     } catch (e: any) {
       // Local storage fallback
       const localData = localStorage.getItem("udayantu_students");
-      const allStudents = localData ? JSON.parse(localData) : MOCK_STUDENTS;
+      const allStudents = localData ? JSON.parse(localData) : [];
 
       const updatedLocal = allStudents.map((s: any) =>
         s.id === selectedStudent.id

@@ -162,16 +162,12 @@ export function AdminTeachers() {
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
-        setTeachers(data as Teacher[]);
-        setIsUsingMock(false);
-      } else {
-        // Fallback to local storage or default mock if db is empty
-        loadMockData();
-      }
+      setTeachers((data as Teacher[]) || []);
+      setIsUsingMock(false);
     } catch (error) {
-      console.warn("Could not load teachers from Supabase. Falling back to local/mock storage.");
-      loadMockData();
+      console.warn("Could not load teachers from live database. Initializing clean/empty state.");
+      setTeachers([]);
+      setIsUsingMock(false);
     } finally {
       setLoading(false);
     }
@@ -419,18 +415,6 @@ export function AdminTeachers() {
           icon={BookOpen}
         />
       </div>
-
-      {isUsingMock && (
-        <div className="border border-amber-200 bg-amber-50 rounded-lg p-3 text-xs text-amber-800 flex items-center justify-between shadow-sm">
-          <span className="flex items-center gap-2">
-            <span>⚠️</span>
-            <span><strong>Sandbox Mode:</strong> Using local browser storage. Changes will persist in your browser. Run database migrations to enable Supabase storage.</span>
-          </span>
-          <Button variant="outline" size="sm" className="h-7 text-xs border-amber-300 bg-white hover:bg-amber-100/50 text-amber-800" onClick={fetchTeachers}>
-            Sync Database
-          </Button>
-        </div>
-      )}
 
       {/* Main Table Card */}
       <Card>

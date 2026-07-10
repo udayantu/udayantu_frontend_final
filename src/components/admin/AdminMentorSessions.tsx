@@ -167,7 +167,6 @@ export function AdminMentorSessions() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        // Resolve student names from database or mock them
         const mapped: MentorSession[] = data.map((s) => ({
           id: s.id,
           student_id: s.student_id,
@@ -184,13 +183,14 @@ export function AdminMentorSessions() {
           student_attendance: s.student_attendance || "present",
         }));
         setSessions(mapped);
-        setIsUsingMock(false);
       } else {
-        loadMockSessions();
+        setSessions([]);
       }
+      setIsUsingMock(false);
     } catch (e) {
-      console.warn("Could not query mentor_sessions from database. Falling back to sandbox.");
-      loadMockSessions();
+      console.warn("Could not query mentor_sessions from database. Initializing empty state.");
+      setSessions([]);
+      setIsUsingMock(false);
     } finally {
       setLoading(false);
     }
@@ -514,18 +514,6 @@ export function AdminMentorSessions() {
           icon={XCircle}
         />
       </div>
-
-      {isUsingMock && (
-        <div className="border border-amber-200 bg-amber-50 rounded-lg p-3 text-xs text-amber-800 flex items-center justify-between shadow-sm">
-          <span className="flex items-center gap-2">
-            <span>⚠️</span>
-            <span><strong>Sandbox Mode:</strong> Session schedules are saved locally. Enable Supabase schemas to share session scheduling company-wide.</span>
-          </span>
-          <Button variant="outline" size="sm" className="h-7 text-xs border-amber-300 bg-white hover:bg-amber-100/50 text-amber-800" onClick={fetchSessionsData}>
-            Sync Database
-          </Button>
-        </div>
-      )}
 
       {/* Main Sessions Card */}
       <Card>

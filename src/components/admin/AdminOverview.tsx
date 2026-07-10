@@ -98,13 +98,22 @@ export function AdminOverview() {
       const payments = paymentsRes.data || [];
 
       if (students.length === 0 && payments.length === 0) {
-        // Empty database fallback
-        setStats(MOCK_STATS);
-        setEnrollmentTrend(MOCK_TREND);
-        setRoleDistribution(MOCK_ROLES);
-        setIsUsingMock(true);
+        // Render empty/zero state for fresh production database
+        setStats({
+          totalStudents: 0,
+          totalRevenue: 0,
+          paidStudents: 0,
+          pendingPayments: 0,
+          activeEmployers: 0,
+          completedAssessments: 0,
+          pendingAssessments: 0,
+          placementRate: 0,
+        });
+        setEnrollmentTrend([]);
+        setRoleDistribution([]);
+        setIsUsingMock(false);
       } else {
-        // Calculate stats
+        // Calculate stats from live database rows
         const paidStudents = students.filter(s => s.payment_status === 'paid').length;
         const totalRevenue = payments
           .filter(p => p.status === 'success')
@@ -151,15 +160,24 @@ export function AdminOverview() {
           .sort((a, b) => b.count - a.count)
           .slice(0, 5);
 
-        setRoleDistribution(roleData.length > 0 ? roleData : MOCK_ROLES);
+        setRoleDistribution(roleData);
         setIsUsingMock(false);
       }
     } catch (error: unknown) {
-      // Graceful fallback to mock data on local database errors
-      setStats(MOCK_STATS);
-      setEnrollmentTrend(MOCK_TREND);
-      setRoleDistribution(MOCK_ROLES);
-      setIsUsingMock(true);
+      console.error("Database fetch failed, loading empty analytics states.");
+      setStats({
+        totalStudents: 0,
+        totalRevenue: 0,
+        paidStudents: 0,
+        pendingPayments: 0,
+        activeEmployers: 0,
+        completedAssessments: 0,
+        pendingAssessments: 0,
+        placementRate: 0,
+      });
+      setEnrollmentTrend([]);
+      setRoleDistribution([]);
+      setIsUsingMock(false);
     } finally {
       setLoading(false);
     }
@@ -177,12 +195,6 @@ export function AdminOverview() {
 
   return (
     <div className="space-y-6">
-      {isUsingMock && (
-        <div className="border border-amber-200 bg-amber-50 rounded-lg p-3 text-xs text-amber-800 flex items-center gap-2">
-          <span>⚠️</span>
-          <span><strong>Sandbox Mode:</strong> Displaying mock analytical statistics since the platform database is currently empty.</span>
-        </div>
-      )}
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
