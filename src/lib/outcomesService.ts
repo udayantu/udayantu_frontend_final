@@ -189,7 +189,7 @@ class OutcomesServiceImpl {
       .select("created_at, status")
       .in("status", ["ready", "interviewing", "offered", "joined", "alumni"]);
 
-    if (!readyStudents || readyStudents.length === 0) return 48;
+    if (!readyStudents || readyStudents.length === 0) return 0;
 
     const now = new Date();
     let totalHours = 0;
@@ -204,7 +204,7 @@ class OutcomesServiceImpl {
       }
     }
 
-    return count > 0 ? Math.round(totalHours / count) : 48;
+    return count > 0 ? Math.round(totalHours / count) : 0;
   }
 
   private async calculateAvgTimeToOffer(): Promise<number> {
@@ -213,10 +213,10 @@ class OutcomesServiceImpl {
       .select("created_at")
       .in("status", ["offered", "joined", "alumni"]);
 
-    if (!offeredStudents || offeredStudents.length === 0) return 12;
+    if (!offeredStudents || offeredStudents.length === 0) return 0;
 
     const avgDays = offeredStudents.length > 0 ? 
-      Math.round(30 + (offeredStudents.length * 2)) : 12;
+      Math.round(30 + (offeredStudents.length * 2)) : 0;
 
     return Math.min(avgDays, 45);
   }
@@ -227,9 +227,9 @@ class OutcomesServiceImpl {
       .select("created_at")
       .in("status", ["joined", "alumni"]);
 
-    if (!joinedStudents || joinedStudents.length === 0) return 21;
+    if (!joinedStudents || joinedStudents.length === 0) return 0;
 
-    return 21;
+    return 0;
   }
 
   private async calculateMedianLPA(): Promise<number> {
@@ -238,7 +238,7 @@ class OutcomesServiceImpl {
       .select("status")
       .in("status", ["offered", "joined", "alumni"]);
 
-    if (!placedStudents || placedStudents.length === 0) return 4.83;
+    if (!placedStudents || placedStudents.length === 0) return 0;
 
     const baseLPA = 4.2;
     const bonusPerStudent = 0.05;
@@ -284,10 +284,10 @@ class OutcomesServiceImpl {
 
       trends.push({
         date: dateStr,
-        shortlisted: shortlisted || Math.floor(Math.random() * 5) + 2,
-        interviewed: interviewed || Math.floor(Math.random() * 4) + 1,
-        offered: offered || Math.floor(Math.random() * 3),
-        joined: joined || Math.floor(Math.random() * 2),
+        shortlisted: shortlisted,
+        interviewed: interviewed,
+        offered: offered,
+        joined: joined,
       });
     }
 

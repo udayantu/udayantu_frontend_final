@@ -59,8 +59,7 @@ export async function getAllContacts(): Promise<ContactSubmission[]> {
     
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_CONTACTS));
-      return MOCK_CONTACTS;
+      return [];
     }
     
     return JSON.parse(stored) as ContactSubmission[];

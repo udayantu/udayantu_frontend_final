@@ -62,6 +62,22 @@ export default function AdminDashboard() {
       localStorage.setItem("udayantu_admin_password", "Love2ai@123");
     }
 
+    // Clear old browser-cached mock local storage keys once
+    const clearMockKeys = [
+      "udayantu_students", 
+      "udayantu_teachers", 
+      "udayantu_mentor_sessions", 
+      "udayantu_employers", 
+      "udayantu_payments", 
+      "udayantu_courses", 
+      "udayantu_assessments",
+      "udayantu_contact_submissions",
+      "udayantu_outcomes_cache"
+    ];
+    clearMockKeys.forEach(key => {
+      localStorage.removeItem(key);
+    });
+
     // Check secure admin session state
     const session = sessionStorage.getItem("udayantu_admin_session");
     if (session === "active") {
