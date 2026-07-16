@@ -219,7 +219,6 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
 
   // Step 1: Continue to OTP
   const handleStep1Submit = async (data: Step1Data) => {
-    // Check if user already exists
     const exists = await checkUserExists(data.mobile);
     if (exists) {
       toast({
@@ -243,12 +242,12 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
       setRegStep(3);
       toast({
         title: "OTP Sent",
-        description: `Verification code sent to ${data.mobile} via Firebase.`,
+        description: `Verification code sent to ${data.mobile}.`,
       });
     } catch (error: any) {
       toast({
         title: "Error sending OTP",
-        description: error.message || "Failed to dispatch verification code via Firebase.",
+        description: error.message || "Failed to dispatch verification code.",
         variant: "destructive",
       });
     } finally {
@@ -446,6 +445,24 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
 
     setIsSubmitting(true);
     try {
+      // Check if email is already in use by another account
+      const { data: existingEmailUser } = await supabase
+        .from("student_registrations")
+        .select("phone")
+        .eq("email", data.email)
+        .neq("phone", step1Data.mobile)
+        .maybeSingle();
+
+      if (existingEmailUser) {
+        toast({
+          title: "Email Already in Use",
+          description: "This email address is already associated with another account.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const { error: upsertError } = await supabase
         .from("student_registrations")
         .upsert({
@@ -501,6 +518,18 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
 
     setIsSubmitting(true);
     try {
+      // Prevent login if user does not exist in student_registrations
+      const exists = await checkUserExists(loginPhone);
+      if (!exists) {
+        toast({
+          title: "Account Not Found",
+          description: "This mobile number is not registered. Please sign up first.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const phoneNumber = `+91${loginPhone}`;
       const appVerifier = getRecaptchaVerifier();
       
@@ -510,12 +539,12 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
       setLoginOtpSent(true);
       toast({
         title: "OTP Sent",
-        description: `Verification code sent to ${loginPhone} via Firebase.`,
+        description: `Verification code sent to ${loginPhone}.`,
       });
     } catch (error: any) {
       toast({
         title: "Error sending OTP",
-        description: error.message || "Failed to dispatch verification code via Firebase.",
+        description: error.message || "Failed to dispatch verification code.",
         variant: "destructive",
       });
     } finally {

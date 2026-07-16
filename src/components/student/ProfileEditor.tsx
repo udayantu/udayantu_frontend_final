@@ -129,6 +129,24 @@ export const ProfileEditor = ({ userId }: ProfileEditorProps) => {
   const onSubmit = async (data: ProfileFormData) => {
     setIsSaving(true);
     try {
+      // Check for duplicate email
+      const { data: existingEmailUser } = await supabase
+        .from('student_registrations')
+        .select('user_id')
+        .eq('email', data.email)
+        .neq('user_id', userId)
+        .maybeSingle();
+
+      if (existingEmailUser) {
+        toast({
+          title: "Email Already in Use",
+          description: "This email address is already associated with another account.",
+          variant: "destructive",
+        });
+        setIsSaving(false);
+        return;
+      }
+
       const { error } = await supabase
         .from('student_registrations')
         .update({

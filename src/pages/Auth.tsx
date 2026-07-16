@@ -204,7 +204,7 @@ export default function Auth() {
       setOtpSent(true);
       toast({
         title: t.otpSent,
-        description: t.otpSentDesc + " via Firebase",
+        description: t.otpSentDesc,
       });
     } catch (error: any) {
       console.error('Send OTP error:', error);

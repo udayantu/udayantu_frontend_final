@@ -105,6 +105,24 @@ export const OnboardingWizard = ({ userId, phoneNumber, onComplete }: Onboarding
   const handleFinalSubmit = async () => {
     setIsSubmitting(true);
     try {
+      // Check for duplicate email
+      const { data: existingEmailUser } = await supabase
+        .from("student_registrations")
+        .select("user_id")
+        .eq("email", formData.email)
+        .neq("user_id", userId)
+        .maybeSingle();
+
+      if (existingEmailUser) {
+        toast({
+          title: "Email Already in Use",
+          description: "This email address is already associated with another account.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const { error } = await supabase
         .from("student_registrations")
         .update({
