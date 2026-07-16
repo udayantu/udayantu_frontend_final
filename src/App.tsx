@@ -22,11 +22,14 @@ const DeferredCookieConsent = () => {
   const [show, setShow] = useState(false);
   
   useEffect(() => {
+    if (window.location.pathname.startsWith('/admin')) {
+      return;
+    }
     const timer = setTimeout(() => setShow(true), 1000);
     return () => clearTimeout(timer);
   }, []);
   
-  if (!show) return null;
+  if (!show || window.location.pathname.startsWith('/admin')) return null;
   
   return (
     <Suspense fallback={null}>

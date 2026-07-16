@@ -214,7 +214,7 @@ export default function AdminDashboard() {
 
           {/* Footer branding */}
           <div className="relative z-10 text-xs text-slate-500 font-bold uppercase tracking-widest">
-            © {new Date().getFullYear()} UdaYantu Technologies
+            © 2026-27 UdaYantu
           </div>
         </div>
 
@@ -345,7 +345,7 @@ export default function AdminDashboard() {
             </Card>
 
             {/* Footer info links */}
-            <div className="flex items-center justify-between text-xs text-slate-400 font-bold px-2 mt-6">
+            <div className="flex flex-col items-center gap-3 text-xs text-slate-400 font-bold px-2 mt-6">
               <button 
                 type="button" 
                 onClick={() => toast({ title: "Support Contacted", description: "An email was dispatched to support@udayantu.com. Our staff will respond within 24 hours." })}
@@ -353,7 +353,9 @@ export default function AdminDashboard() {
               >
                 Need help? <span className="text-[#EA580C] hover:underline">Contact Support</span>
               </button>
-              <button type="button" className="hover:text-slate-600 transition-colors">Cookie Settings</button>
+              <div className="text-slate-500 text-xs font-semibold lowercase select-none text-center">
+                all right reserve 2026-27
+              </div>
             </div>
           </div>
         </div>

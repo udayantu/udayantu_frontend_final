@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 /**
  * Contact Submissions Storage Service
  * Uses a simple in-memory + localStorage fallback approach
@@ -50,8 +52,22 @@ const MOCK_CONTACTS: ContactSubmission[] = [
   }
 ];
 
-// Get all submissions from localStorage
+// Get all submissions from database with localStorage fallback
 export async function getAllContacts(): Promise<ContactSubmission[]> {
+  try {
+    const { data, error } = await supabase
+      .from("contact_submissions")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    if (data && data.length > 0) {
+      return data as ContactSubmission[];
+    }
+  } catch (error) {
+    console.error("Database fetch failed for contacts, checking localStorage fallback:", error);
+  }
+
   try {
     if (typeof window === "undefined") {
       return [];
@@ -59,7 +75,7 @@ export async function getAllContacts(): Promise<ContactSubmission[]> {
     
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) {
-      return [];
+      return MOCK_CONTACTS;
     }
     
     return JSON.parse(stored) as ContactSubmission[];
@@ -68,8 +84,6 @@ export async function getAllContacts(): Promise<ContactSubmission[]> {
     return [];
   }
 }
-
-import { supabase } from "@/integrations/supabase/client";
 
 // Save new contact submission to database & trigger admin notification
 export async function submitContact(

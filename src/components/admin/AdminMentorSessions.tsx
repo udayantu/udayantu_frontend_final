@@ -188,9 +188,8 @@ export function AdminMentorSessions() {
       }
       setIsUsingMock(false);
     } catch (e) {
-      console.warn("Could not query mentor_sessions from database. Initializing empty state.");
-      setSessions([]);
-      setIsUsingMock(false);
+      console.warn("Could not query mentor_sessions from database. Loading from local storage fallback.");
+      loadMockSessions();
     } finally {
       setLoading(false);
     }
@@ -323,19 +322,28 @@ export function AdminMentorSessions() {
 
     try {
       if (!isUsingMock) {
-        const { error } = await supabase.from("mentor_sessions").insert({
-          id: newSession.id,
-          student_id: newSession.student_id,
-          mentor_name: newSession.mentor_name,
-          teacher_id: newSession.teacher_id,
-          session_date: newSession.session_date,
-          duration_minutes: newSession.duration_minutes,
-          topic: newSession.topic,
-          meeting_link: newSession.meeting_link,
-          status: newSession.status,
-          notes: newSession.notes,
-        });
-        if (error) throw error;
+        try {
+          const { error } = await supabase.from("mentor_sessions").insert({
+            id: newSession.id,
+            student_id: newSession.student_id,
+            mentor_name: newSession.mentor_name,
+            teacher_id: newSession.teacher_id,
+            session_date: newSession.session_date,
+            duration_minutes: newSession.duration_minutes,
+            topic: newSession.topic,
+            meeting_link: newSession.meeting_link,
+            status: newSession.status,
+            notes: newSession.notes,
+          });
+          if (error) throw error;
+        } catch (dbError) {
+          console.warn("Supabase session insert failed, falling back to local storage:", dbError);
+          setIsUsingMock(true);
+          const stored = localStorage.getItem("udayantu_mentor_sessions");
+          const list = stored ? JSON.parse(stored) : [];
+          list.unshift(newSession);
+          localStorage.setItem("udayantu_mentor_sessions", JSON.stringify(list));
+        }
       }
 
       saveSessionsList([newSession, ...sessions]);
@@ -377,17 +385,26 @@ export function AdminMentorSessions() {
 
     try {
       if (!isUsingMock) {
-        const { error } = await supabase
-          .from("mentor_sessions")
-          .update({
-            status: "completed",
-            student_attendance: attendance,
-            feedback_rating: rating,
-            notes,
-          })
-          .eq("id", activeSession.id);
+        try {
+          const { error } = await supabase
+            .from("mentor_sessions")
+            .update({
+              status: "completed",
+              student_attendance: attendance,
+              feedback_rating: rating,
+              notes,
+            })
+            .eq("id", activeSession.id);
 
-        if (error) throw error;
+          if (error) throw error;
+        } catch (dbError) {
+          console.warn("Supabase session update failed, falling back to local storage:", dbError);
+          setIsUsingMock(true);
+          const stored = localStorage.getItem("udayantu_mentor_sessions");
+          const list = stored ? JSON.parse(stored) : [];
+          const updatedList = list.map((s: MentorSession) => (s.id === activeSession.id ? updatedSession : s));
+          localStorage.setItem("udayantu_mentor_sessions", JSON.stringify(updatedList));
+        }
       }
 
       const updated = sessions.map((s) => (s.id === activeSession.id ? updatedSession : s));
@@ -395,20 +412,18 @@ export function AdminMentorSessions() {
       setFeedbackDialogOpen(false);
 
       // Increment teacher's total teaching hours in mock storage if applicable
-      if (isUsingMock) {
-        const storedT = localStorage.getItem("udayantu_teachers");
-        if (storedT) {
-          const parsedList = JSON.parse(storedT) as any[];
-          const nextList = parsedList.map((t) => {
-            if (t.id === activeSession.teacher_id) {
-              const prev = Number(t.total_hours) || 0;
-              const hrs = Math.ceil(activeSession.duration_minutes / 60);
-              return { ...t, total_hours: prev + hrs };
-            }
-            return t;
-          });
-          localStorage.setItem("udayantu_teachers", JSON.stringify(nextList));
-        }
+      const storedT = localStorage.getItem("udayantu_teachers");
+      if (storedT) {
+        const parsedList = JSON.parse(storedT) as any[];
+        const nextList = parsedList.map((t) => {
+          if (t.id === activeSession.teacher_id) {
+            const prev = Number(t.total_hours) || 0;
+            const hrs = Math.ceil(activeSession.duration_minutes / 60);
+            return { ...t, total_hours: prev + hrs };
+          }
+          return t;
+        });
+        localStorage.setItem("udayantu_teachers", JSON.stringify(nextList));
       }
 
       toast({
@@ -429,11 +444,22 @@ export function AdminMentorSessions() {
 
     try {
       if (!isUsingMock) {
-        const { error } = await supabase
-          .from("mentor_sessions")
-          .update({ status: "cancelled" })
-          .eq("id", id);
-        if (error) throw error;
+        try {
+          const { error } = await supabase
+            .from("mentor_sessions")
+            .update({ status: "cancelled" })
+            .eq("id", id);
+          if (error) throw error;
+        } catch (dbError) {
+          console.warn("Supabase session cancel failed, falling back to local storage:", dbError);
+          setIsUsingMock(true);
+          const stored = localStorage.getItem("udayantu_mentor_sessions");
+          const list = stored ? JSON.parse(stored) : [];
+          const updatedList = list.map((s: MentorSession) =>
+            s.id === id ? { ...s, status: "cancelled" as const } : s
+          );
+          localStorage.setItem("udayantu_mentor_sessions", JSON.stringify(updatedList));
+        }
       }
 
       const updated = sessions.map((s) =>

@@ -49,11 +49,11 @@ const MOCK_TEACHERS: Teacher[] = [
     full_name: "Dr. Ramesh Prasad",
     email: "ramesh.prasad@udayantu.org",
     phone: "9876543210",
-    specialization: "Aptitude & Logical Reasoning",
+    specialization: "Project Management",
     status: "active",
     total_hours: 120,
     pay_rate: 800,
-    bio: "Experienced aptitude trainer with 10+ years in helping rural graduates clear competitive exams.",
+    bio: "Experienced Project Management instructor teaching Agile, Scrum, and professional planning frameworks.",
     created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
   },
   {
@@ -61,11 +61,11 @@ const MOCK_TEACHERS: Teacher[] = [
     full_name: "Meera Nair",
     email: "meera.nair@udayantu.org",
     phone: "9812345678",
-    specialization: "Communicative English & Soft Skills",
+    specialization: "Customer Success",
     status: "active",
     total_hours: 85,
     pay_rate: 650,
-    bio: "Passionate soft skills trainer focused on confidence building and conversational English.",
+    bio: "Passionate Customer Success expert coaching student cohorts on onboarding workflows, escalations, and CRM software tools.",
     created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()
   },
   {
@@ -73,11 +73,11 @@ const MOCK_TEACHERS: Teacher[] = [
     full_name: "Alok Sengupta",
     email: "alok.sengupta@udayantu.org",
     phone: "9123456789",
-    specialization: "Basic IT Skills & MS Office Suite",
+    specialization: "Operations Management",
     status: "active",
     total_hours: 42,
     pay_rate: 500,
-    bio: "Technical instructor specializing in introductory computer literacy and spreadsheet analytics.",
+    bio: "Operations leader teaching process mapping, supply chain metrics, and Excel analytics to fresh graduates.",
     created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
   },
   {
@@ -85,11 +85,11 @@ const MOCK_TEACHERS: Teacher[] = [
     full_name: "Sunita Deshmukh",
     email: "sunita.d@udayantu.org",
     phone: "9988776655",
-    specialization: "Business Development & Sales Fundamentals",
+    specialization: "Business Development",
     status: "inactive",
     total_hours: 60,
     pay_rate: 750,
-    bio: "Former corporate sales manager teaching professional communication and customer relationship building.",
+    bio: "Former corporate sales manager teaching lead generation, client presentations, and negotiation techniques.",
     created_at: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString()
   }
 ];
@@ -165,9 +165,8 @@ export function AdminTeachers() {
       setTeachers((data as Teacher[]) || []);
       setIsUsingMock(false);
     } catch (error) {
-      console.warn("Could not load teachers from live database. Initializing clean/empty state.");
-      setTeachers([]);
-      setIsUsingMock(false);
+      console.warn("Could not load teachers from live database. Loading from local storage fallback.");
+      loadMockData();
     } finally {
       setLoading(false);
     }
@@ -232,10 +231,13 @@ export function AdminTeachers() {
         description: "Instructor record has been deleted successfully.",
       });
     } catch (error) {
+      console.warn("Database delete failed, removing locally:", error);
+      const updated = teachers.filter((t) => t.id !== id);
+      saveTeachersList(updated);
+      setIsUsingMock(true);
       toast({
-        title: "Deletion Failed",
-        description: "Could not delete record from database.",
-        variant: "destructive",
+        title: "Instructor Removed (Local)",
+        description: "Instructor record has been deleted locally.",
       });
     }
   };
@@ -261,9 +263,15 @@ export function AdminTeachers() {
         description: `${teacher.full_name} is now ${nextStatus}.`,
       });
     } catch (error) {
+      console.warn("Database status toggle failed, updating locally:", error);
+      const updated = teachers.map((t) =>
+        t.id === teacher.id ? { ...t, status: nextStatus } : t
+      );
+      saveTeachersList(updated);
+      setIsUsingMock(true);
       toast({
-        title: "Update Failed",
-        variant: "destructive",
+        title: "Status Updated (Local)",
+        description: `${teacher.full_name} is now ${nextStatus} locally.`,
       });
     }
   };
@@ -296,8 +304,17 @@ export function AdminTeachers() {
         };
 
         if (!isUsingMock) {
-          const { error } = await supabase.from("teachers").insert(newRecord);
-          if (error) throw error;
+          try {
+            const { error } = await supabase.from("teachers").insert(newRecord);
+            if (error) throw error;
+          } catch (dbError) {
+            console.warn("Supabase insert failed, falling back to local storage:", dbError);
+            setIsUsingMock(true);
+            const stored = localStorage.getItem("udayantu_teachers");
+            const list = stored ? JSON.parse(stored) : [];
+            list.unshift(newRecord);
+            localStorage.setItem("udayantu_teachers", JSON.stringify(list));
+          }
         }
 
         saveTeachersList([newRecord, ...teachers]);
@@ -313,11 +330,20 @@ export function AdminTeachers() {
         } as Teacher;
 
         if (!isUsingMock) {
-          const { error } = await supabase
-            .from("teachers")
-            .update(updatedRecord)
-            .eq("id", updatedRecord.id);
-          if (error) throw error;
+          try {
+            const { error } = await supabase
+              .from("teachers")
+              .update(updatedRecord)
+              .eq("id", updatedRecord.id);
+            if (error) throw error;
+          } catch (dbError) {
+            console.warn("Supabase update failed, falling back to local storage:", dbError);
+            setIsUsingMock(true);
+            const stored = localStorage.getItem("udayantu_teachers");
+            const list = stored ? JSON.parse(stored) : [];
+            const updatedList = list.map((t: Teacher) => (t.id === updatedRecord.id ? updatedRecord : t));
+            localStorage.setItem("udayantu_teachers", JSON.stringify(updatedList));
+          }
         }
 
         saveTeachersList(
@@ -726,11 +752,14 @@ export function AdminTeachers() {
                     <SelectValue placeholder="Select Specialization" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Aptitude & Logical Reasoning">Aptitude & Logical Reasoning</SelectItem>
-                    <SelectItem value="Communicative English & Soft Skills">Communicative English & Soft Skills</SelectItem>
-                    <SelectItem value="Basic IT Skills & MS Office Suite">Basic IT Skills & MS Office Suite</SelectItem>
-                    <SelectItem value="Business Development & Sales Fundamentals">Business Development & Sales Fundamentals</SelectItem>
-                    <SelectItem value="Operations Management & Customer Success">Operations Management & Customer Success</SelectItem>
+                    <SelectItem value="Business Development">Business Development</SelectItem>
+                    <SelectItem value="Customer Success">Customer Success</SelectItem>
+                    <SelectItem value="Project Management">Project Management</SelectItem>
+                    <SelectItem value="Operations Management">Operations Management</SelectItem>
+                    <SelectItem value="Product Management">Product Management</SelectItem>
+                    <SelectItem value="Human Resources">Human Resources</SelectItem>
+                    <SelectItem value="Marketing Management">Marketing Management</SelectItem>
+                    <SelectItem value="Customer Support">Customer Support</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
