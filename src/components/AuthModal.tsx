@@ -7,7 +7,7 @@ import { indianStatesDistricts, qualifications } from "@/data/indianStates";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { sendOtp, verifyOtp } from "@/lib/api";
-import { signInWithPhoneNumber, RecaptchaVerifier } from "firebase/auth";
+import { signInWithPhoneNumber, RecaptchaVerifier, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth as firebaseAuth } from "@/lib/firebase";
 import {
   Dialog,
@@ -446,22 +446,25 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
 
     setIsSubmitting(true);
     try {
-      const { error: updateError } = await supabase
+      const { error: upsertError } = await supabase
         .from("student_registrations")
-        .update({
+        .upsert({
           full_name: step1Data.fullName,
           email: data.email,
+          phone: step1Data.mobile,
           qualification: step1Data.qualification,
           desired_role: step1Data.desiredRole,
           state: data.state,
           district: data.district,
           location: `${data.district}, ${data.state}`,
           status: 'registered',
-        })
-        .eq('phone', step1Data.mobile);
+          user_id: localStorage.getItem("udayantu_mock_user") ? JSON.parse(localStorage.getItem("udayantu_mock_user") || "{}").id : null
+        }, {
+          onConflict: 'phone'
+        });
 
-      if (updateError) {
-        throw new Error('Failed to complete registration');
+      if (upsertError) {
+        throw new Error('Failed to complete registration: ' + upsertError.message);
       }
 
       toast({
@@ -626,6 +629,76 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
     setLoginOtpSent(false);
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsSubmitting(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(firebaseAuth, provider);
+      const firebaseUser = result.user;
+
+      // Check if user already exists by email in student_registrations
+      let dbUser = null;
+      if (firebaseUser.email) {
+        const { data } = await supabase
+          .from("student_registrations")
+          .select("*")
+          .eq("email", firebaseUser.email)
+          .maybeSingle();
+        dbUser = data;
+      }
+
+      const mockUser = {
+        id: firebaseUser.uid,
+        phone: firebaseUser.phoneNumber || "",
+        email: firebaseUser.email || "",
+        user_metadata: {
+          full_name: firebaseUser.displayName || "",
+          email: firebaseUser.email || "",
+          avatar_url: firebaseUser.photoURL || "",
+          verified: true
+        }
+      };
+
+      localStorage.setItem("udayantu_mock_user", JSON.stringify(mockUser));
+      window.dispatchEvent(new Event("storage"));
+
+      if (dbUser) {
+        toast({
+          title: "Welcome Back!",
+          description: `Logged in as ${firebaseUser.displayName || 'User'}`,
+        });
+        onOpenChange(false);
+        if (dbUser.payment_status === 'paid') {
+          navigate("/dashboard");
+        } else {
+          navigate("/payment");
+        }
+      } else {
+        toast({
+          title: "Signed in with Google",
+          description: "Please complete your profile to finish registration",
+        });
+        
+        // Auto-fill available details
+        step1Form.setValue("fullName", firebaseUser.displayName || "");
+        step2Form.setValue("email", firebaseUser.email || "");
+        
+        // Go to registration tab and set step to 1
+        setActiveTab("register");
+        setRegStep(1);
+      }
+    } catch (error: any) {
+      console.error("Google login error:", error);
+      toast({
+        title: "Authentication Failed",
+        description: error.message || "Failed to sign in with Google.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const states = Object.keys(indianStatesDistricts).sort();
 
   return (
@@ -760,6 +833,28 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </>
                   )}
+                </Button>
+
+                <div className="relative flex py-2 items-center">
+                  <div className="flex-grow border-t border-muted"></div>
+                  <span className="flex-shrink mx-4 text-muted-foreground text-xs font-bold uppercase tracking-wider">OR</span>
+                  <div className="flex-grow border-t border-muted"></div>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleGoogleSignIn}
+                  disabled={isSubmitting}
+                  className="w-full bg-white hover:bg-slate-50 border-border text-slate-700 font-semibold h-11 transition-all flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.54 14.98 1 12 1 7.35 1 3.37 3.65 1.39 7.56l3.85 2.99c.92-2.77 3.5-4.51 6.76-4.51z"/>
+                    <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.7 2.87c2.16-2 3.72-4.94 3.72-8.69z"/>
+                    <path fill="#FBBC05" d="M5.24 14.75c-.24-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29L1.39 7.18C.5 8.93 0 10.91 0 13s.5 4.07 1.39 5.82l3.85-3.07z"/>
+                    <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.7-2.87c-1.12.75-2.56 1.22-4.26 1.22-3.26 0-5.84-1.74-6.76-4.51L1.39 17C3.37 20.91 7.35 23 12 23z"/>
+                  </svg>
+                  Continue with Google
                 </Button>
                 
                 <p className="text-xs text-center text-muted-foreground">
@@ -965,6 +1060,28 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
                     ) : (
                       t.sendOtp
                     )}
+                  </Button>
+
+                  <div className="relative flex py-2 items-center">
+                    <div className="flex-grow border-t border-muted"></div>
+                    <span className="flex-shrink mx-4 text-muted-foreground text-xs font-bold uppercase tracking-wider">OR</span>
+                    <div className="flex-grow border-t border-muted"></div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGoogleSignIn}
+                    disabled={isSubmitting}
+                    className="w-full bg-white hover:bg-slate-50 border-border text-slate-700 font-semibold h-11 transition-all flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                      <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.54 14.98 1 12 1 7.35 1 3.37 3.65 1.39 7.56l3.85 2.99c.92-2.77 3.5-4.51 6.76-4.51z"/>
+                      <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.7 2.87c2.16-2 3.72-4.94 3.72-8.69z"/>
+                      <path fill="#FBBC05" d="M5.24 14.75c-.24-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29L1.39 7.18C.5 8.93 0 10.91 0 13s.5 4.07 1.39 5.82l3.85-3.07z"/>
+                      <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.7-2.87c-1.12.75-2.56 1.22-4.26 1.22-3.26 0-5.84-1.74-6.76-4.51L1.39 17C3.37 20.91 7.35 23 12 23z"/>
+                    </svg>
+                    Continue with Google
                   </Button>
                 </>
               ) : (
