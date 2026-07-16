@@ -298,77 +298,100 @@ export default function Payment() {
       let razorpayKeyId = "rzp_live_TBiIvzhEutsj8F";
 
       try {
-        console.log("Attempting to call create-payment-order Edge Function...");
-        const { data: orderData, error: orderError } = await supabase.functions.invoke(
-          'create-payment-order'
-        );
+        console.log("Attempting to call Vercel serverless create-payment-order...");
+        const response = await fetch('/api/create-payment-order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ user_id: user.id }),
+        });
 
-        if (orderError) throw orderError;
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to create payment order via Vercel');
+        }
+
+        const orderData = await response.json();
         orderId = orderData.order_id;
         paymentRecordId = orderData.payment_id;
         razorpayKeyId = orderData.key_id;
-      } catch (fnError: any) {
-        console.warn("Edge function create-payment-order failed, running client-side fallback:", fnError);
+      } catch (vercelError: any) {
+        console.warn("Vercel serverless create-payment-order failed, trying Supabase Edge Function fallback:", vercelError);
         
-        // Client-side order creation fallback
-        const razorpayKeySecret = "agWByu52qWlbieuD457a0ieu";
-        const credentials = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
-        
-        const receiptId = `receipt_${user.id.slice(0, 8)}_${Date.now()}`;
-        const razorpayResponse = await fetch('https://api.razorpay.com/v1/orders', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Basic ${credentials}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            amount: totalAmount * 100, // paise
-            currency: 'INR',
-            receipt: receiptId,
-            notes: { user_id: user.id },
-          }),
-        });
+        try {
+          console.log("Attempting to call create-payment-order Edge Function...");
+          const { data: orderData, error: orderError } = await supabase.functions.invoke(
+            'create-payment-order'
+          );
 
-        if (!razorpayResponse.ok) {
-          const errText = await razorpayResponse.text();
-          console.error("Razorpay order creation failed:", errText);
-          throw new Error("Razorpay integration error: " + errText);
+          if (orderError) throw orderError;
+          orderId = orderData.order_id;
+          paymentRecordId = orderData.payment_id;
+          razorpayKeyId = orderData.key_id;
+        } catch (fnError: any) {
+          console.warn("Edge function create-payment-order failed, running client-side fallback:", fnError);
+          
+          // Client-side order creation fallback (requires CORS-bypassing client configuration, may fail)
+          const razorpayKeySecret = "agWByu52qWlbieuD457a0ieu";
+          const credentials = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
+          
+          const receiptId = `receipt_${user.id.slice(0, 8)}_${Date.now()}`;
+          const razorpayResponse = await fetch('https://api.razorpay.com/v1/orders', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Basic ${credentials}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              amount: totalAmount * 100, // paise
+              currency: 'INR',
+              receipt: receiptId,
+              notes: { user_id: user.id },
+            }),
+          });
+
+          if (!razorpayResponse.ok) {
+            const errText = await razorpayResponse.text();
+            console.error("Razorpay order creation failed:", errText);
+            throw new Error("Razorpay integration error: " + errText);
+          }
+
+          const razorpayOrder = await razorpayResponse.json();
+          orderId = razorpayOrder.id;
+
+          // Insert payment record via Supabase client
+          const { data: payment, error: paymentError } = await supabase
+            .from('payments')
+            .insert({
+              user_id: user.id,
+              amount: totalAmount * 100,
+              razorpay_order_id: razorpayOrder.id,
+              status: 'created',
+              currency: 'INR',
+              amount_base_inr: baseAmount,
+              gst_percent: gstPercent,
+              gst_amount_inr: gstAmount,
+              amount_final_inr: totalAmount,
+            })
+            .select()
+            .single();
+
+          if (paymentError) {
+            console.error("Payment insert error:", paymentError);
+            throw paymentError;
+          }
+          paymentRecordId = payment.id;
+
+          // Update student registration with order ID
+          await supabase
+            .from('student_registrations')
+            .update({
+              payment_order_id: razorpayOrder.id,
+              payment_status: 'pending',
+            })
+            .eq('user_id', user.id);
         }
-
-        const razorpayOrder = await razorpayResponse.json();
-        orderId = razorpayOrder.id;
-
-        // Insert payment record via Supabase client
-        const { data: payment, error: paymentError } = await supabase
-          .from('payments')
-          .insert({
-            user_id: user.id,
-            amount: totalAmount * 100,
-            razorpay_order_id: razorpayOrder.id,
-            status: 'created',
-            currency: 'INR',
-            amount_base_inr: baseAmount,
-            gst_percent: gstPercent,
-            gst_amount_inr: gstAmount,
-            amount_final_inr: totalAmount,
-          })
-          .select()
-          .single();
-
-        if (paymentError) {
-          console.error("Payment insert error:", paymentError);
-          throw paymentError;
-        }
-        paymentRecordId = payment.id;
-
-        // Update student registration with order ID
-        await supabase
-          .from('student_registrations')
-          .update({
-            payment_order_id: razorpayOrder.id,
-            payment_status: 'pending',
-          })
-          .eq('user_id', user.id);
       }
 
       const options = {
@@ -383,40 +406,63 @@ export default function Payment() {
             let verifySuccess = false;
             
             try {
-              console.log("Attempting to call verify-payment Edge Function...");
-              const { error: verifyError } = await supabase.functions.invoke('verify-payment', {
-                body: {
+              console.log("Attempting to call Vercel serverless verify-payment...");
+              const verifyResponse = await fetch('/api/verify-payment', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_signature: response.razorpay_signature,
-                },
+                }),
               });
 
-              if (verifyError) throw verifyError;
+              if (!verifyResponse.ok) {
+                const errData = await verifyResponse.json().catch(() => ({}));
+                throw new Error(errData.error || 'Payment verification failed via Vercel');
+              }
               verifySuccess = true;
-            } catch (fnVerifyError: any) {
-              console.warn("Edge function verify-payment failed, running client-side fallback:", fnVerifyError);
+            } catch (vercelVerifyError: any) {
+              console.warn("Vercel verify-payment failed, trying Supabase Edge Function:", vercelVerifyError);
               
-              // Client-side verification fallback
-              // Update payment record to captured
-              const { error: payUpdateErr } = await supabase
-                .from('payments')
-                .update({ 
-                  status: 'captured', 
-                  razorpay_payment_id: response.razorpay_payment_id as string 
-                })
-                .eq('razorpay_order_id', response.razorpay_order_id as string);
+              try {
+                console.log("Attempting to call verify-payment Edge Function...");
+                const { error: verifyError } = await supabase.functions.invoke('verify-payment', {
+                  body: {
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                  },
+                });
 
-              if (payUpdateErr) throw payUpdateErr;
+                if (verifyError) throw verifyError;
+                verifySuccess = true;
+              } catch (fnVerifyError: any) {
+                console.warn("All payment verification backends failed, running direct database update fallback:", fnVerifyError);
+                
+                // Direct client-side verification fallback
+                // Update payment record to captured
+                const { error: payUpdateErr } = await supabase
+                  .from('payments')
+                  .update({ 
+                    status: 'captured', 
+                    razorpay_payment_id: response.razorpay_payment_id as string 
+                  })
+                  .eq('razorpay_order_id', response.razorpay_order_id as string);
 
-              // Update student registration to paid
-              const { error: regUpdateErr } = await supabase
-                .from('student_registrations')
-                .update({ payment_status: 'paid' })
-                .eq('payment_order_id', response.razorpay_order_id as string);
+                if (payUpdateErr) throw payUpdateErr;
 
-              if (regUpdateErr) throw regUpdateErr;
-              verifySuccess = true;
+                // Update student registration to paid
+                const { error: regUpdateErr } = await supabase
+                  .from('student_registrations')
+                  .update({ payment_status: 'paid' })
+                  .eq('payment_order_id', response.razorpay_order_id as string);
+
+                if (regUpdateErr) throw regUpdateErr;
+                verifySuccess = true;
+              }
             }
 
             if (verifySuccess) {
