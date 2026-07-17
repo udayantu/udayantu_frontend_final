@@ -970,30 +970,15 @@ CREATE POLICY "Allow insert for all" ON contact_submissions
 
 -- RLS Policy - Only admins can read
 CREATE POLICY "Allow read for admins" ON contact_submissions
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_roles ur 
-      WHERE ur.email = auth.email() AND ur.role = 'admin'
-    )
-  );
+  FOR SELECT USING (public.has_role(auth.uid(), 'admin'));
 
 -- RLS Policy - Only admins can update
 CREATE POLICY "Allow update for admins" ON contact_submissions
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM user_roles ur 
-      WHERE ur.email = auth.email() AND ur.role = 'admin'
-    )
-  );
+  FOR UPDATE USING (public.has_role(auth.uid(), 'admin'));
 
 -- RLS Policy - Only admins can delete
 CREATE POLICY "Allow delete for admins" ON contact_submissions
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM user_roles ur 
-      WHERE ur.email = auth.email() AND ur.role = 'admin'
-    )
-  );
+  FOR DELETE USING (public.has_role(auth.uid(), 'admin'));
 
 
 -- MIGRATION: 20251201_candidate_system.sql
