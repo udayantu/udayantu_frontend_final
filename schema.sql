@@ -1209,7 +1209,7 @@ CREATE INDEX IF NOT EXISTS idx_page_visits_page_name ON public.page_visits(page_
 
 -- MIGRATION: 20260108090015_543544f3-823f-4521-a68f-1b5a0c28d300.sql
 -- Create employer_conversions table for analytics events
-CREATE TABLE public.employer_conversions (
+CREATE TABLE IF NOT EXISTS public.employer_conversions (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   page_name TEXT NOT NULL,
   event_type TEXT NOT NULL,
