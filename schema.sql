@@ -811,8 +811,7 @@ CREATE TABLE IF NOT EXISTS page_visits (
   referrer text,
   session_duration_seconds integer DEFAULT 0,
   bounced boolean DEFAULT false,
-  created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT page_visits_visitor_id_fkey FOREIGN KEY (visitor_id) REFERENCES user_roles(id) ON DELETE SET NULL
+  created_at timestamp with time zone DEFAULT now()
 );
 
 -- Employer conversion events table
@@ -1187,7 +1186,7 @@ CREATE POLICY "Students can view their own documents" ON offer_documents
 
 -- MIGRATION: 20251212154025_1b491e1f-9274-4cd3-8ae9-9ab543378784.sql
 -- Create page_visits table for analytics tracking
-CREATE TABLE public.page_visits (
+CREATE TABLE IF NOT EXISTS public.page_visits (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   page_name TEXT NOT NULL,
   visitor_id TEXT,

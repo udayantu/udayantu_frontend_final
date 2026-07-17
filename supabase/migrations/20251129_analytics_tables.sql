@@ -15,8 +15,7 @@ CREATE TABLE IF NOT EXISTS page_visits (
   referrer text,
   session_duration_seconds integer DEFAULT 0,
   bounced boolean DEFAULT false,
-  created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT page_visits_visitor_id_fkey FOREIGN KEY (visitor_id) REFERENCES user_roles(id) ON DELETE SET NULL
+  created_at timestamp with time zone DEFAULT now()
 );
 
 -- Employer conversion events table

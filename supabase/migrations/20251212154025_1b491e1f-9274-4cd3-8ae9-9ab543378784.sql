@@ -1,5 +1,5 @@
 -- Create page_visits table for analytics tracking
-CREATE TABLE public.page_visits (
+CREATE TABLE IF NOT EXISTS public.page_visits (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   page_name TEXT NOT NULL,
   visitor_id TEXT,
