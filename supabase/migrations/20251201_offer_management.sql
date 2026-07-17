@@ -54,7 +54,7 @@ CREATE POLICY "Employers can manage their own offers" ON offers
     auth.uid()::text = employer_id OR
     EXISTS (
       SELECT 1 FROM employers
-      WHERE employers.id = offers.employer_id
+      WHERE employers.id::text = offers.employer_id
       AND employers.admin_id = auth.uid()::text
     )
   );
@@ -68,7 +68,7 @@ CREATE POLICY "Employers can view offer documents" ON offer_documents
         auth.uid()::text = offers.employer_id OR
         EXISTS (
           SELECT 1 FROM employers
-          WHERE employers.id = offers.employer_id
+          WHERE employers.id::text = offers.employer_id
           AND employers.admin_id = auth.uid()::text
         )
       )
