@@ -107,7 +107,7 @@ export function AdminTeachers() {
   // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
-  const [currentTeacher, setCurrentTeacher] = useState<Partial<Teacher>>({
+  const [currentTeacher, setCurrentTeacher] = useState<Partial<Omit<Teacher, "pay_rate" | "total_hours">> & { pay_rate?: number | string; total_hours?: number | string }>({
     full_name: "",
     email: "",
     phone: "",
@@ -770,8 +770,8 @@ export function AdminTeachers() {
                   <Input
                     id="pay_rate"
                     type="number"
-                    value={currentTeacher.pay_rate || 500}
-                    onChange={(e) => setCurrentTeacher({ ...currentTeacher, pay_rate: Number(e.target.value) })}
+                    value={currentTeacher.pay_rate ?? ""}
+                    onChange={(e) => setCurrentTeacher({ ...currentTeacher, pay_rate: e.target.value === "" ? "" : Number(e.target.value) })}
                     min={0}
                   />
                 </div>
@@ -780,8 +780,8 @@ export function AdminTeachers() {
                   <Input
                     id="total_hours"
                     type="number"
-                    value={currentTeacher.total_hours || 0}
-                    onChange={(e) => setCurrentTeacher({ ...currentTeacher, total_hours: Number(e.target.value) })}
+                    value={currentTeacher.total_hours ?? ""}
+                    onChange={(e) => setCurrentTeacher({ ...currentTeacher, total_hours: e.target.value === "" ? "" : Number(e.target.value) })}
                     min={0}
                   />
                 </div>
