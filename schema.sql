@@ -793,7 +793,7 @@ COMMENT ON INDEX idx_student_registrations_status IS 'Index for admin dashboard 
 COMMENT ON INDEX idx_payments_status IS 'Index for admin dashboard payment queries';
 COMMENT ON INDEX idx_assessments_student_id IS 'Index for joining assessments with students';
 
--- MIGRATION: 20251129_analytics_tables.sql
+-- MIGRATION: 20251129000000_analytics_tables.sql
 -- Analytics Tables for Employers Page Tracking
 
 -- Page visits tracking table
@@ -942,7 +942,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- MIGRATION: 20251130_contact_us_table.sql
+-- MIGRATION: 20251130000000_contact_us_table.sql
 -- Contact Us Form Submissions Table
 CREATE TABLE IF NOT EXISTS contact_submissions (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -981,7 +981,7 @@ CREATE POLICY "Allow delete for admins" ON contact_submissions
   FOR DELETE USING (public.has_role(auth.uid(), 'admin'));
 
 
--- MIGRATION: 20251201_candidate_system.sql
+-- MIGRATION: 20251201000000_candidate_system.sql
 -- Candidate assessments and evidence tracking
 CREATE TABLE IF NOT EXISTS public.candidate_assessments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1078,7 +1078,7 @@ CREATE INDEX IF NOT EXISTS idx_recruiter_actions_student_id ON recruiter_actions
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC);
 
 
--- MIGRATION: 20251201_offer_management.sql
+-- MIGRATION: 20251201000001_offer_management.sql
 -- Ensure employers table has admin_id column referenced in policies
 ALTER TABLE public.employers ADD COLUMN IF NOT EXISTS admin_id TEXT;
 
@@ -1247,7 +1247,7 @@ CREATE INDEX idx_employer_conversions_page ON public.employer_conversions(page_n
 CREATE INDEX idx_employer_conversions_event ON public.employer_conversions(event_type);
 CREATE INDEX idx_employer_conversions_timestamp ON public.employer_conversions(timestamp DESC);
 
--- MIGRATION: 20260708_teachers_mentors.sql
+-- MIGRATION: 20260708000000_teachers_mentors.sql
 -- Create teachers table
 CREATE TABLE IF NOT EXISTS public.teachers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
