@@ -32,14 +32,14 @@ ON public.blog_posts
 FOR ALL
 USING (auth.uid() IS NOT NULL);
 
--- Create index for slug lookup
-CREATE INDEX idx_blog_posts_slug ON public.blog_posts(slug);
+-- CREATE INDEX IF NOT EXISTS for slug lookup
+CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON public.blog_posts(slug);
 
--- Create index for published posts
-CREATE INDEX idx_blog_posts_published ON public.blog_posts(published, published_at DESC);
+-- CREATE INDEX IF NOT EXISTS for published posts
+CREATE INDEX IF NOT EXISTS idx_blog_posts_published ON public.blog_posts(published, published_at DESC);
 
--- Create index for category
-CREATE INDEX idx_blog_posts_category ON public.blog_posts(category);
+-- CREATE INDEX IF NOT EXISTS for category
+CREATE INDEX IF NOT EXISTS idx_blog_posts_category ON public.blog_posts(category);
 
 -- Create trigger for automatic timestamp updates
 CREATE TRIGGER update_blog_posts_updated_at

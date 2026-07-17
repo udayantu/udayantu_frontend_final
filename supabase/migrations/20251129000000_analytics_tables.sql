@@ -57,15 +57,15 @@ CREATE TABLE IF NOT EXISTS page_analytics_daily (
   CONSTRAINT unique_page_date UNIQUE (page_name, analytics_date)
 );
 
--- Create indexes for performance
-CREATE INDEX idx_page_visits_page_name ON page_visits(page_name);
-CREATE INDEX idx_page_visits_timestamp ON page_visits(timestamp DESC);
-CREATE INDEX idx_page_visits_visitor_id ON page_visits(visitor_id);
-CREATE INDEX idx_page_visits_session_id ON page_visits(session_id);
-CREATE INDEX idx_employer_conversions_page_name ON employer_conversions(page_name);
-CREATE INDEX idx_employer_conversions_timestamp ON employer_conversions(timestamp DESC);
-CREATE INDEX idx_employer_conversions_event_type ON employer_conversions(event_type);
-CREATE INDEX idx_page_analytics_daily_page_date ON page_analytics_daily(page_name, analytics_date DESC);
+-- CREATE INDEX IF NOT EXISTSes for performance
+CREATE INDEX IF NOT EXISTS idx_page_visits_page_name ON page_visits(page_name);
+CREATE INDEX IF NOT EXISTS idx_page_visits_timestamp ON page_visits(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_page_visits_visitor_id ON page_visits(visitor_id);
+CREATE INDEX IF NOT EXISTS idx_page_visits_session_id ON page_visits(session_id);
+CREATE INDEX IF NOT EXISTS idx_employer_conversions_page_name ON employer_conversions(page_name);
+CREATE INDEX IF NOT EXISTS idx_employer_conversions_timestamp ON employer_conversions(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_employer_conversions_event_type ON employer_conversions(event_type);
+CREATE INDEX IF NOT EXISTS idx_page_analytics_daily_page_date ON page_analytics_daily(page_name, analytics_date DESC);
 
 -- Enable Row Level Security
 ALTER TABLE page_visits ENABLE ROW LEVEL SECURITY;

@@ -31,6 +31,6 @@ ON public.page_visits
 FOR SELECT
 USING (has_role(auth.uid(), 'admin'::app_role));
 
--- Create index for faster queries
-CREATE INDEX idx_page_visits_timestamp ON public.page_visits(timestamp DESC);
-CREATE INDEX idx_page_visits_page_name ON public.page_visits(page_name);
+-- CREATE INDEX IF NOT EXISTS for faster queries
+CREATE INDEX IF NOT EXISTS idx_page_visits_timestamp ON public.page_visits(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_page_visits_page_name ON public.page_visits(page_name);

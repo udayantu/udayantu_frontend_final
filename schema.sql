@@ -370,14 +370,14 @@ ON public.blog_posts
 FOR ALL
 USING (auth.uid() IS NOT NULL);
 
--- Create index for slug lookup
-CREATE INDEX idx_blog_posts_slug ON public.blog_posts(slug);
+-- CREATE INDEX IF NOT EXISTS for slug lookup
+CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON public.blog_posts(slug);
 
--- Create index for published posts
-CREATE INDEX idx_blog_posts_published ON public.blog_posts(published, published_at DESC);
+-- CREATE INDEX IF NOT EXISTS for published posts
+CREATE INDEX IF NOT EXISTS idx_blog_posts_published ON public.blog_posts(published, published_at DESC);
 
--- Create index for category
-CREATE INDEX idx_blog_posts_category ON public.blog_posts(category);
+-- CREATE INDEX IF NOT EXISTS for category
+CREATE INDEX IF NOT EXISTS idx_blog_posts_category ON public.blog_posts(category);
 
 -- Create trigger for automatic timestamp updates
 CREATE TRIGGER update_blog_posts_updated_at
@@ -683,7 +683,7 @@ ON public.assessment_attempts
 FOR ALL
 USING (has_role(auth.uid(), 'admin'::app_role));
 
--- Create index for faster queries
+-- CREATE INDEX IF NOT EXISTS for faster queries
 CREATE INDEX IF NOT EXISTS idx_training_modules_role ON public.training_modules(role_type);
 CREATE INDEX IF NOT EXISTS idx_assessment_attempts_student ON public.assessment_attempts(student_id);
 CREATE INDEX IF NOT EXISTS idx_assessments_student_type ON public.assessments(student_id, type);
@@ -693,11 +693,11 @@ CREATE INDEX IF NOT EXISTS idx_assessments_student_type ON public.assessments(st
 ALTER TABLE public.student_registrations 
 ADD CONSTRAINT student_registrations_phone_unique UNIQUE (phone);
 
--- Create index for faster phone lookups
+-- CREATE INDEX IF NOT EXISTS for faster phone lookups
 CREATE INDEX IF NOT EXISTS idx_student_registrations_phone 
 ON public.student_registrations(phone);
 
--- Create index for user_id lookups
+-- CREATE INDEX IF NOT EXISTS for user_id lookups
 CREATE INDEX IF NOT EXISTS idx_student_registrations_user_id 
 ON public.student_registrations(user_id) WHERE user_id IS NOT NULL;
 
@@ -853,15 +853,15 @@ CREATE TABLE IF NOT EXISTS page_analytics_daily (
   CONSTRAINT unique_page_date UNIQUE (page_name, analytics_date)
 );
 
--- Create indexes for performance
-CREATE INDEX idx_page_visits_page_name ON page_visits(page_name);
-CREATE INDEX idx_page_visits_timestamp ON page_visits(timestamp DESC);
-CREATE INDEX idx_page_visits_visitor_id ON page_visits(visitor_id);
-CREATE INDEX idx_page_visits_session_id ON page_visits(session_id);
-CREATE INDEX idx_employer_conversions_page_name ON employer_conversions(page_name);
-CREATE INDEX idx_employer_conversions_timestamp ON employer_conversions(timestamp DESC);
-CREATE INDEX idx_employer_conversions_event_type ON employer_conversions(event_type);
-CREATE INDEX idx_page_analytics_daily_page_date ON page_analytics_daily(page_name, analytics_date DESC);
+-- CREATE INDEX IF NOT EXISTSes for performance
+CREATE INDEX IF NOT EXISTS idx_page_visits_page_name ON page_visits(page_name);
+CREATE INDEX IF NOT EXISTS idx_page_visits_timestamp ON page_visits(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_page_visits_visitor_id ON page_visits(visitor_id);
+CREATE INDEX IF NOT EXISTS idx_page_visits_session_id ON page_visits(session_id);
+CREATE INDEX IF NOT EXISTS idx_employer_conversions_page_name ON employer_conversions(page_name);
+CREATE INDEX IF NOT EXISTS idx_employer_conversions_timestamp ON employer_conversions(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_employer_conversions_event_type ON employer_conversions(event_type);
+CREATE INDEX IF NOT EXISTS idx_page_analytics_daily_page_date ON page_analytics_daily(page_name, analytics_date DESC);
 
 -- Enable Row Level Security
 ALTER TABLE page_visits ENABLE ROW LEVEL SECURITY;
@@ -956,10 +956,10 @@ CREATE TABLE IF NOT EXISTS contact_submissions (
   updated_at timestamp with time zone DEFAULT now()
 );
 
--- Create indexes for performance
-CREATE INDEX idx_contact_submissions_email ON contact_submissions(email);
-CREATE INDEX idx_contact_submissions_role ON contact_submissions(role);
-CREATE INDEX idx_contact_submissions_created_at ON contact_submissions(created_at DESC);
+-- CREATE INDEX IF NOT EXISTSes for performance
+CREATE INDEX IF NOT EXISTS idx_contact_submissions_email ON contact_submissions(email);
+CREATE INDEX IF NOT EXISTS idx_contact_submissions_role ON contact_submissions(role);
+CREATE INDEX IF NOT EXISTS idx_contact_submissions_created_at ON contact_submissions(created_at DESC);
 
 -- Enable Row Level Security
 ALTER TABLE contact_submissions ENABLE ROW LEVEL SECURITY;
@@ -1117,12 +1117,12 @@ CREATE TABLE IF NOT EXISTS offer_status_history (
 );
 
 -- Indexes for faster queries
-CREATE INDEX idx_offers_employer ON offers(employer_id);
-CREATE INDEX idx_offers_student ON offers(student_id);
-CREATE INDEX idx_offers_status ON offers(status);
-CREATE INDEX idx_offers_joining_date ON offers(joining_date);
-CREATE INDEX idx_offer_documents_offer_id ON offer_documents(offer_id);
-CREATE INDEX idx_offer_status_history_offer_id ON offer_status_history(offer_id);
+CREATE INDEX IF NOT EXISTS idx_offers_employer ON offers(employer_id);
+CREATE INDEX IF NOT EXISTS idx_offers_student ON offers(student_id);
+CREATE INDEX IF NOT EXISTS idx_offers_status ON offers(status);
+CREATE INDEX IF NOT EXISTS idx_offers_joining_date ON offers(joining_date);
+CREATE INDEX IF NOT EXISTS idx_offer_documents_offer_id ON offer_documents(offer_id);
+CREATE INDEX IF NOT EXISTS idx_offer_status_history_offer_id ON offer_status_history(offer_id);
 
 -- Enable RLS
 ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
@@ -1203,9 +1203,9 @@ ON public.page_visits
 FOR SELECT
 USING (has_role(auth.uid(), 'admin'::app_role));
 
--- Create index for faster queries
-CREATE INDEX idx_page_visits_timestamp ON public.page_visits(timestamp DESC);
-CREATE INDEX idx_page_visits_page_name ON public.page_visits(page_name);
+-- CREATE INDEX IF NOT EXISTS for faster queries
+CREATE INDEX IF NOT EXISTS idx_page_visits_timestamp ON public.page_visits(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_page_visits_page_name ON public.page_visits(page_name);
 
 -- MIGRATION: 20260108090015_543544f3-823f-4521-a68f-1b5a0c28d300.sql
 -- Create employer_conversions table for analytics events
@@ -1243,9 +1243,9 @@ USING (
 );
 
 -- Add index for common queries
-CREATE INDEX idx_employer_conversions_page ON public.employer_conversions(page_name);
-CREATE INDEX idx_employer_conversions_event ON public.employer_conversions(event_type);
-CREATE INDEX idx_employer_conversions_timestamp ON public.employer_conversions(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_employer_conversions_page ON public.employer_conversions(page_name);
+CREATE INDEX IF NOT EXISTS idx_employer_conversions_event ON public.employer_conversions(event_type);
+CREATE INDEX IF NOT EXISTS idx_employer_conversions_timestamp ON public.employer_conversions(timestamp DESC);
 
 -- MIGRATION: 20260708000000_teachers_mentors.sql
 -- Create teachers table

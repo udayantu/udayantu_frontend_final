@@ -11,10 +11,10 @@ CREATE TABLE IF NOT EXISTS contact_submissions (
   updated_at timestamp with time zone DEFAULT now()
 );
 
--- Create indexes for performance
-CREATE INDEX idx_contact_submissions_email ON contact_submissions(email);
-CREATE INDEX idx_contact_submissions_role ON contact_submissions(role);
-CREATE INDEX idx_contact_submissions_created_at ON contact_submissions(created_at DESC);
+-- CREATE INDEX IF NOT EXISTSes for performance
+CREATE INDEX IF NOT EXISTS idx_contact_submissions_email ON contact_submissions(email);
+CREATE INDEX IF NOT EXISTS idx_contact_submissions_role ON contact_submissions(role);
+CREATE INDEX IF NOT EXISTS idx_contact_submissions_created_at ON contact_submissions(created_at DESC);
 
 -- Enable Row Level Security
 ALTER TABLE contact_submissions ENABLE ROW LEVEL SECURITY;

@@ -75,7 +75,7 @@ ON public.assessment_attempts
 FOR ALL
 USING (has_role(auth.uid(), 'admin'::app_role));
 
--- Create index for faster queries
+-- CREATE INDEX IF NOT EXISTS for faster queries
 CREATE INDEX IF NOT EXISTS idx_training_modules_role ON public.training_modules(role_type);
 CREATE INDEX IF NOT EXISTS idx_assessment_attempts_student ON public.assessment_attempts(student_id);
 CREATE INDEX IF NOT EXISTS idx_assessments_student_type ON public.assessments(student_id, type);

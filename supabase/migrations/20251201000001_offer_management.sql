@@ -36,12 +36,12 @@ CREATE TABLE IF NOT EXISTS offer_status_history (
 );
 
 -- Indexes for faster queries
-CREATE INDEX idx_offers_employer ON offers(employer_id);
-CREATE INDEX idx_offers_student ON offers(student_id);
-CREATE INDEX idx_offers_status ON offers(status);
-CREATE INDEX idx_offers_joining_date ON offers(joining_date);
-CREATE INDEX idx_offer_documents_offer_id ON offer_documents(offer_id);
-CREATE INDEX idx_offer_status_history_offer_id ON offer_status_history(offer_id);
+CREATE INDEX IF NOT EXISTS idx_offers_employer ON offers(employer_id);
+CREATE INDEX IF NOT EXISTS idx_offers_student ON offers(student_id);
+CREATE INDEX IF NOT EXISTS idx_offers_status ON offers(status);
+CREATE INDEX IF NOT EXISTS idx_offers_joining_date ON offers(joining_date);
+CREATE INDEX IF NOT EXISTS idx_offer_documents_offer_id ON offer_documents(offer_id);
+CREATE INDEX IF NOT EXISTS idx_offer_status_history_offer_id ON offer_status_history(offer_id);
 
 -- Enable RLS
 ALTER TABLE offers ENABLE ROW LEVEL SECURITY;

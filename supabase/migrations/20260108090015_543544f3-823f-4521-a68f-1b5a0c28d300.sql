@@ -33,6 +33,6 @@ USING (
 );
 
 -- Add index for common queries
-CREATE INDEX idx_employer_conversions_page ON public.employer_conversions(page_name);
-CREATE INDEX idx_employer_conversions_event ON public.employer_conversions(event_type);
-CREATE INDEX idx_employer_conversions_timestamp ON public.employer_conversions(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_employer_conversions_page ON public.employer_conversions(page_name);
+CREATE INDEX IF NOT EXISTS idx_employer_conversions_event ON public.employer_conversions(event_type);
+CREATE INDEX IF NOT EXISTS idx_employer_conversions_timestamp ON public.employer_conversions(timestamp DESC);

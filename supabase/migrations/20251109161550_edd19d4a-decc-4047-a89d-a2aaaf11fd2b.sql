@@ -2,11 +2,11 @@
 ALTER TABLE public.student_registrations 
 ADD CONSTRAINT student_registrations_phone_unique UNIQUE (phone);
 
--- Create index for faster phone lookups
+-- CREATE INDEX IF NOT EXISTS for faster phone lookups
 CREATE INDEX IF NOT EXISTS idx_student_registrations_phone 
 ON public.student_registrations(phone);
 
--- Create index for user_id lookups
+-- CREATE INDEX IF NOT EXISTS for user_id lookups
 CREATE INDEX IF NOT EXISTS idx_student_registrations_user_id 
 ON public.student_registrations(user_id) WHERE user_id IS NOT NULL;
 
