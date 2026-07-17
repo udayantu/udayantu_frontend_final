@@ -1,5 +1,5 @@
--- Offer Management Tables
--- Tracks salary offers, documents, and joining status
+-- Ensure employers table has admin_id column referenced in policies
+ALTER TABLE public.employers ADD COLUMN IF NOT EXISTS admin_id TEXT;
 
 CREATE TABLE IF NOT EXISTS offers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
