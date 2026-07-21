@@ -238,7 +238,7 @@ export const Footer = memo(() => {
                 </a>
                 
                 <a 
-                  href="https://wa.me/919876543210" 
+                  href="https://wa.me/message/3ZRKURYKBYOPE1" 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/40 hover:bg-white/10 transition-all group"
