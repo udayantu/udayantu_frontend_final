@@ -176,16 +176,16 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
     },
   });
 
-  // Check if user exists
+  // Check if user exists by phone
   const checkUserExists = async (phone: string) => {
     try {
       const { data } = await supabase
         .from('student_registrations')
-        .select('user_id')
+        .select('id')
         .eq('phone', phone)
         .maybeSingle();
       
-      return !!data?.user_id;
+      return !!data;
     } catch (error) {
       console.error('Error checking user:', error);
       return false;

@@ -234,11 +234,27 @@ export default function Payment() {
           .single();
         setConfig((configData?.config as PaymentConfig) || {});
 
-        const { data: regData } = await supabase
+        const userPhone = user.phone || (user.user_metadata as any)?.phone;
+        let regData = null;
+
+        const { data: regByUserId } = await supabase
           .from('student_registrations')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
+
+        if (regByUserId) {
+          regData = regByUserId;
+        } else if (userPhone) {
+          const cleanPhone = userPhone.replace(/^\+91/, '');
+          const { data: regByPhone } = await supabase
+            .from('student_registrations')
+            .select('*')
+            .eq('phone', cleanPhone)
+            .maybeSingle();
+          regData = regByPhone;
+        }
+
         setRegistration(regData);
 
         if (regData?.payment_status === 'paid') {

@@ -692,7 +692,7 @@ export function AdminTeachers() {
                     id="pay_rate"
                     type="number"
                     value={currentTeacher.pay_rate ?? ""}
-                    onChange={(e) => setCurrentTeacher({ ...currentTeacher, pay_rate: e.target.value === "" ? "" : Number(e.target.value) })}
+                    onChange={(e) => setCurrentTeacher({ ...currentTeacher, pay_rate: e.target.value })}
                     min={0}
                   />
                 </div>
@@ -702,7 +702,7 @@ export function AdminTeachers() {
                     id="total_hours"
                     type="number"
                     value={currentTeacher.total_hours ?? ""}
-                    onChange={(e) => setCurrentTeacher({ ...currentTeacher, total_hours: e.target.value === "" ? "" : Number(e.target.value) })}
+                    onChange={(e) => setCurrentTeacher({ ...currentTeacher, total_hours: e.target.value })}
                     min={0}
                   />
                 </div>
