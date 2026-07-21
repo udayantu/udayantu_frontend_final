@@ -62,7 +62,11 @@ const parseEmployer = (employer: any): Employer => ({
   email: employer.email || "",
   phone: employer.phone || "",
   designation: employer.designation || "",
-  roles_needed: employer.roles_needed || [],
+  roles_needed: Array.isArray(employer.roles_needed) 
+    ? employer.roles_needed 
+    : typeof employer.roles_needed === "string" 
+    ? employer.roles_needed.split(",").map((r: string) => r.trim()) 
+    : [],
   hiring_timeline: employer.hiring_timeline || "",
   cohort_size_estimate: employer.cohort_size_estimate || 0,
   status: employer.status || "Pending",
@@ -423,7 +427,8 @@ export function AdminEmployers() {
   };
 
   const getCompanyColor = (companyName: string) => {
-    const hash = companyName.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const safeName = companyName || "Company";
+    const hash = safeName.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const colors = ["bg-red-50 text-red-600 border-red-100", "bg-blue-50 text-blue-600 border-blue-100", "bg-emerald-50 text-emerald-600 border-emerald-100", "bg-purple-50 text-purple-600 border-purple-100", "bg-amber-50 text-amber-600 border-amber-100"];
     return colors[hash % colors.length];
   };
@@ -768,7 +773,7 @@ export function AdminEmployers() {
                             <TableCell className="py-4 pl-6">
                               <div className="flex items-center gap-3">
                                 <div className={`w-9 h-9 rounded-xl border flex items-center justify-center font-bold text-xs uppercase select-none ${avatarClass}`}>
-                                  {emp.company_name.substring(0, 2)}
+                                  {(emp.company_name || "EM").substring(0, 2)}
                                 </div>
                                 <div className="space-y-0.5">
                                   <span className="text-xs font-bold text-[#1E3A63] block leading-tight">{emp.company_name}</span>
@@ -965,7 +970,7 @@ export function AdminEmployers() {
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] text-slate-400 font-extrabold">{index + 1}</span>
                         <div className={`w-6 h-6 rounded-lg ${c.bg} flex items-center justify-center font-bold text-[10px]`}>
-                          {emp.company_name.substring(0, 3).toUpperCase()}
+                          {(emp.company_name || "EMP").substring(0, 3).toUpperCase()}
                         </div>
                         <span className="text-slate-700 truncate max-w-[120px]">{emp.company_name}</span>
                       </div>
