@@ -466,9 +466,9 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-3">
             <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 bg-slate-100 flex items-center justify-center font-bold text-sm uppercase">
               <img 
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&h=100&q=80" 
-                alt="Profile Avatar" 
-                className="w-full h-full object-cover" 
+                src={logoImage} 
+                alt="Udayantu Logo" 
+                className="w-full h-full object-contain p-1" 
               />
             </div>
             <div className="space-y-0.5">

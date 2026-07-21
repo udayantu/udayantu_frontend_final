@@ -31,30 +31,7 @@ interface Payment {
   created_at: string;
 }
 
-const MOCK_PAYMENTS: Payment[] = [
-  {
-    id: "p1",
-    user_id: "u1",
-    amount: 499900,
-    status: "success",
-    currency: "INR",
-    method: "upi",
-    razorpay_order_id: "order_KkW3As8a2d1f",
-    razorpay_payment_id: "pay_KkW3As9f8e7d",
-    created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: "p2",
-    user_id: "u2",
-    amount: 499900,
-    status: "pending",
-    currency: "INR",
-    method: "card",
-    razorpay_order_id: "order_JnW4As7a3d1c",
-    razorpay_payment_id: "",
-    created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()
-  }
-];
+
 
 const ITEMS_PER_PAGE = 10;
 

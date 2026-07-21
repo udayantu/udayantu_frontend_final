@@ -51,54 +51,6 @@ interface SelectorItem {
 
 const ITEMS_PER_PAGE = 5;
 
-const MOCK_SESSIONS: MentorSession[] = [
-  {
-    id: "s1",
-    student_id: "st1",
-    student_name: "Amit Kumar",
-    teacher_id: "t1",
-    mentor_name: "Dr. Ramesh Prasad",
-    session_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-    duration_minutes: 60,
-    topic: "Linear Equations & Quantitative Practice",
-    meeting_link: "https://meet.google.com/abc-defg-hij",
-    status: "scheduled",
-    notes: "",
-    feedback_rating: null,
-    student_attendance: "present"
-  },
-  {
-    id: "s2",
-    student_id: "st2",
-    student_name: "Priyanka Patel",
-    teacher_id: "t2",
-    mentor_name: "Meera Nair",
-    session_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    duration_minutes: 45,
-    topic: "Introduction and Ice Breaking Exercises",
-    meeting_link: "https://meet.google.com/xyz-uvwx-yza",
-    status: "completed",
-    notes: "Priyanka spoke very confidently. Her introduction has improved, but she needs practice with active voice sentences.",
-    feedback_rating: 4,
-    student_attendance: "present"
-  },
-  {
-    id: "s3",
-    student_id: "st3",
-    student_name: "Rahul Verma",
-    teacher_id: "t3",
-    mentor_name: "Alok Sengupta",
-    session_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    duration_minutes: 60,
-    topic: "Excel VLOOKUP & Pivot Tables Session",
-    meeting_link: "https://meet.google.com/pqr-stuv-wxy",
-    status: "no-show",
-    notes: "Student did not join the meeting link. Attempted contact, phone was switched off.",
-    feedback_rating: null,
-    student_attendance: "absent"
-  }
-];
-
 export function AdminMentorSessions() {
   const [sessions, setSessions] = useState<MentorSession[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<MentorSession[]>([]);
@@ -170,7 +122,7 @@ export function AdminMentorSessions() {
         const mapped: MentorSession[] = data.map((s) => ({
           id: s.id,
           student_id: s.student_id,
-          student_name: "Student " + s.student_id.slice(0, 4), // Placeholder if we don't join
+          student_name: s.student_name || "Student " + s.student_id.slice(0, 4),
           teacher_id: s.teacher_id || "",
           mentor_name: s.mentor_name,
           session_date: s.session_date,
@@ -188,21 +140,11 @@ export function AdminMentorSessions() {
       }
       setIsUsingMock(false);
     } catch (e) {
-      console.warn("Could not query mentor_sessions from database. Loading from local storage fallback.");
-      loadMockSessions();
+      console.warn("Could not query mentor_sessions from database.");
+      setSessions([]);
+      setIsUsingMock(false);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadMockSessions = () => {
-    setIsUsingMock(true);
-    const stored = localStorage.getItem("udayantu_mentor_sessions");
-    if (stored) {
-      setSessions(JSON.parse(stored));
-    } else {
-      localStorage.setItem("udayantu_mentor_sessions", JSON.stringify(MOCK_SESSIONS));
-      setSessions(MOCK_SESSIONS);
     }
   };
 

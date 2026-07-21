@@ -104,18 +104,13 @@ const CookieConsent = ({ onConsent }: CookieConsentProps) => {
 
   const t = text[language];
 
+  if (window.location.pathname.startsWith('/admin')) {
+    return null;
+  }
+
   // Prevent banner from showing if consent already given and not forced to renew
   if (!showBanner && !showModal) {
-    return (
-      <button
-        onClick={() => setShowModal(true)}
-        className="fixed bottom-6 right-6 z-40 px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors opacity-60 hover:opacity-100"
-        data-testid="button-cookie-settings"
-        title={t.cookieSettings}
-      >
-        {t.cookieSettings}
-      </button>
-    );
+    return null;
   }
 
   return (

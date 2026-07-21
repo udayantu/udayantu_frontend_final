@@ -39,38 +39,7 @@ interface FailedStudent {
   last_completed_at: string;
 }
 
-const MOCK_ASSESSMENTS: Assessment[] = [
-  {
-    id: "as1",
-    student_id: "u1",
-    type: "Aptitude Test",
-    score: 78,
-    attempt_number: 1,
-    completed_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    full_name: "Amit Kumar Sharma",
-    email: "amit.sharma@gmail.com"
-  },
-  {
-    id: "as2",
-    student_id: "u2",
-    type: "Psychometric Evaluation",
-    score: 85,
-    attempt_number: 1,
-    completed_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    full_name: "Neha Patel",
-    email: "neha.patel@outlook.com"
-  },
-  {
-    id: "as3",
-    student_id: "u3",
-    type: "Aptitude Test",
-    score: 45,
-    attempt_number: 1,
-    completed_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    full_name: "Rajesh Gond",
-    email: "rajesh.gond@yahoo.com"
-  }
-];
+
 
 const SUBJECT_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#0ea5e9', '#8b5cf6', '#ec4899', '#6366f1'];
 

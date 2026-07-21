@@ -264,53 +264,11 @@ export interface StoredReadyPacket {
   status: "new" | "viewed" | "actioned";
 }
 
-const MOCK_READY_PACKETS: StoredReadyPacket[] = [
-  {
-    id: "rp1",
-    studentId: "s1",
-    studentName: "Amit Kumar Sharma",
-    readinessScore: 92,
-    toolsProficiency: {
-      crm: 4,
-      jira: 5,
-      spreadsheets: 4,
-      communication: 5
-    },
-    languageLevel: "advanced",
-    attendanceStreak: 18,
-    assessmentCount: 3,
-    emittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    targetAudience: ["admin", "student_success", "customer_success"],
-    viewedBy: [],
-    status: "new"
-  },
-  {
-    id: "rp2",
-    studentId: "s4",
-    studentName: "Pooja Verma",
-    readinessScore: 88,
-    toolsProficiency: {
-      crm: 5,
-      jira: 4,
-      spreadsheets: 3,
-      communication: 4
-    },
-    languageLevel: "intermediate",
-    attendanceStreak: 12,
-    assessmentCount: 2,
-    emittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    targetAudience: ["admin", "student_success"],
-    viewedBy: [],
-    status: "new"
-  }
-];
-
 function getStoredReadyPackets(): StoredReadyPacket[] {
   try {
     const stored = localStorage.getItem(READY_PACKETS_STORAGE_KEY);
     if (!stored) {
-      localStorage.setItem(READY_PACKETS_STORAGE_KEY, JSON.stringify(MOCK_READY_PACKETS));
-      return MOCK_READY_PACKETS;
+      return [];
     }
     return JSON.parse(stored);
   } catch {

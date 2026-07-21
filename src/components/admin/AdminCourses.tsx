@@ -51,38 +51,6 @@ interface Course {
   curriculum?: CurriculumModule[];
 }
 
-const MOCK_COURSES: Course[] = [
-  {
-    id: "c1",
-    title: "Executive Business Development Program",
-    title_hi: "कार्यकारी व्यवसाय विकास कार्यक्रम",
-    description: "Learn client relationship skills, dynamic lead generation, and B2B corporate communications.",
-    description_hi: "ग्राहक संबंध कौशल, गतिशील लीड जनरेशन और बी2बी कॉर्पोरेट संचार सीखें।",
-    role_type: "Sales Executive",
-    duration_weeks: 12,
-    status: "active",
-    preview_video_url: "https://www.youtube.com/watch?v=mock1",
-    curriculum: [
-      { week: 1, title: "Foundations of Sales", topics: ["Cold calling", "Lead generation"] },
-      { week: 2, title: "Negotiation and Closing", topics: ["Handling objections", "Contract signing"] }
-    ]
-  },
-  {
-    id: "c2",
-    title: "Customer Support & Success Masterclass",
-    title_hi: "ग्राहक सहायता और सफलता मास्टरक्लास",
-    description: "Master ticketing workflows, escalation paths, client satisfaction metrics, and CRM software tools.",
-    description_hi: "टिकटिंग वर्कफ़्लो, एस्केलेशन पथ, क्लाइंट संतुष्टि मेट्रिक्स और सीआरएम सॉफ़्टवेयर टूल में महारत हासिल करें।",
-    role_type: "Customer Support",
-    duration_weeks: 8,
-    status: "active",
-    preview_video_url: "https://www.youtube.com/watch?v=mock2",
-    curriculum: [
-      { week: 1, title: "Introduction to CRM", topics: ["Zendesk basics", "Email support etiquette"] }
-    ]
-  }
-];
-
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
@@ -134,7 +102,7 @@ export function AdminCourses() {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error || !data || data.length === 0) throw new Error("No database courses found");
+      if (error) throw error;
       // Map the data to match our Course interface
       const mappedCourses: Course[] = (data || []).map((course) => ({
         id: course.id,
