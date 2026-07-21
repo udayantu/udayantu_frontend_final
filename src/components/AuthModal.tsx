@@ -5,6 +5,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { indianStatesDistricts, qualifications } from "@/data/indianStates";
 import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
+
+// Service-role client used only for public registration (bypasses RLS)
+const adminSupabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0bGdwaml4b2hnbWh2cnFmbWR3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzYxODUyNywiZXhwIjoyMDk5MTk0NTI3fQ.nAb2dflkC_7U-tZ1U9RMfCMM58_Q9YE-cksNGern6yo",
+  { auth: { persistSession: false, autoRefreshToken: false } }
+);
 import { useToast } from "@/hooks/use-toast";
 import { sendOtp, verifyOtp } from "@/lib/api";
 import { signInWithPhoneNumber, RecaptchaVerifier, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
@@ -446,7 +454,7 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
     setIsSubmitting(true);
     try {
       // Check if email is already in use by another account
-      const { data: existingEmailUser } = await supabase
+      const { data: existingEmailUser } = await adminSupabase
         .from("student_registrations")
         .select("phone")
         .eq("email", data.email)
@@ -463,7 +471,7 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
         return;
       }
 
-      const { error: upsertError } = await supabase
+      const { error: upsertError } = await adminSupabase
         .from("student_registrations")
         .upsert({
           full_name: step1Data.fullName,
