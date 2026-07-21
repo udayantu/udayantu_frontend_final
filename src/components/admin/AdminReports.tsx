@@ -36,7 +36,22 @@ export function AdminReports() {
   useEffect(() => {
     const stored = localStorage.getItem("udayantu_compiled_reports");
     if (stored) {
-      setReports(JSON.parse(stored));
+      try {
+        const parsed: CompiledReport[] = JSON.parse(stored);
+        // Filter out any legacy seeded dummy entries (known fake report names)
+        const dummyNames = [
+          "Q2 Placement Outcomes Summary",
+          "Student Assessment Readiness Index",
+          "Mentor Sessions Hour Logs & Invoices",
+          "Waitlisted Employers Engagement Log"
+        ];
+        const clean = parsed.filter(r => !dummyNames.includes(r.name));
+        setReports(clean);
+        localStorage.setItem("udayantu_compiled_reports", JSON.stringify(clean));
+      } catch {
+        localStorage.removeItem("udayantu_compiled_reports");
+        setReports([]);
+      }
     } else {
       setReports([]);
     }
@@ -106,18 +121,18 @@ export function AdminReports() {
         </Card>
         <Card className="shadow-sm border-slate-100 rounded-2xl bg-white p-4">
           <span className="text-xs font-bold text-slate-400 block">Average Compile Speed</span>
-          <span className="text-2xl font-black text-[#1E3A63] block mt-1">840ms</span>
-          <span className="text-[10px] text-emerald-600 font-bold mt-1 block">99.8% database queries optimal</span>
+          <span className="text-2xl font-black text-[#1E3A63] block mt-1">—</span>
+          <span className="text-[10px] text-slate-400 font-bold mt-1 block">No reports generated yet</span>
         </Card>
         <Card className="shadow-sm border-slate-100 rounded-2xl bg-white p-4">
           <span className="text-xs font-bold text-slate-400 block">Scheduled Pipelines</span>
-          <span className="text-2xl font-black text-[#1E3A63] block mt-1">3 Active</span>
-          <span className="text-[10px] text-slate-500 font-bold mt-1 block">Weekly email dispatches</span>
+          <span className="text-2xl font-black text-[#1E3A63] block mt-1">0</span>
+          <span className="text-[10px] text-slate-500 font-bold mt-1 block">No active pipelines</span>
         </Card>
         <Card className="shadow-sm border-slate-100 rounded-2xl bg-white p-4">
           <span className="text-xs font-bold text-slate-400 block">Billed Hours This Month</span>
-          <span className="text-2xl font-black text-[#1E3A63] block mt-1">162 hrs</span>
-          <span className="text-[10px] text-emerald-600 font-bold mt-1 block">Mentoring billing verified</span>
+          <span className="text-2xl font-black text-[#1E3A63] block mt-1">0 hrs</span>
+          <span className="text-[10px] text-slate-400 font-bold mt-1 block">No billing data yet</span>
         </Card>
       </div>
 

@@ -45,7 +45,17 @@ export function AdminCommunications() {
   useEffect(() => {
     const stored = localStorage.getItem("udayantu_communications");
     if (stored) {
-      setMessages(JSON.parse(stored));
+      try {
+        const parsed: CommMessage[] = JSON.parse(stored);
+        // Filter out any legacy seeded dummy entries (known fake names)
+        const dummyNames = ["Amit Kumar Sharma", "Tata Consultancy Services", "Dr. Ramesh Prasad", "Karan Johar", "Neha Iyer"];
+        const clean = parsed.filter(m => !dummyNames.includes(m.recipient_name));
+        setMessages(clean);
+        localStorage.setItem("udayantu_communications", JSON.stringify(clean));
+      } catch {
+        localStorage.removeItem("udayantu_communications");
+        setMessages([]);
+      }
     } else {
       setMessages([]);
     }
