@@ -527,10 +527,6 @@ export function AdminEmployers() {
         </div>
         
         <div className="flex items-center gap-3.5">
-          <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-50 font-bold px-3 py-1 flex items-center gap-1.5 rounded-full text-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            ONLINE
-          </Badge>
           <Button 
             onClick={handleOpenAddModal}
             className="bg-[#1E3A63] hover:bg-[#1E3A63]/90 text-white font-semibold text-xs gap-1.5 py-2 px-4 shadow-sm rounded-xl"
