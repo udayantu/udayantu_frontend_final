@@ -30,54 +30,6 @@ interface CommMessage {
   created_at: string;
 }
 
-const INITIAL_MESSAGES: CommMessage[] = [
-  {
-    id: "c1",
-    recipient_name: "Amit Kumar Sharma",
-    recipient_role: "Student",
-    channel: "SMS",
-    message_preview: "Your UdaYantu OTP code is 482019. Valid for 10 minutes.",
-    status: "Delivered",
-    created_at: new Date(Date.now() - 5 * 60 * 1000).toISOString()
-  },
-  {
-    id: "c2",
-    recipient_name: "Tata Consultancy Services",
-    recipient_role: "Employer",
-    channel: "Email",
-    message_preview: "Thank you for registering. Your partnership verification is complete.",
-    status: "Delivered",
-    created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: "c3",
-    recipient_name: "Dr. Ramesh Prasad",
-    recipient_role: "Instructor",
-    channel: "WhatsApp",
-    message_preview: "Reminder: You have a scheduled mentor session with Amit at 3:00 PM today.",
-    status: "Delivered",
-    created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: "c4",
-    recipient_name: "Karan Johar",
-    recipient_role: "Student",
-    channel: "SMS",
-    message_preview: "Please complete your pending assessment module by tonight to release your rank card.",
-    status: "Failed",
-    created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: "c5",
-    recipient_name: "Neha Iyer",
-    recipient_role: "Instructor",
-    channel: "Email",
-    message_preview: "Your teaching invoice for June 2026 has been approved and disbursed.",
-    status: "Delivered",
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
-  }
-];
-
 export function AdminCommunications() {
   const [messages, setMessages] = useState<CommMessage[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -95,8 +47,7 @@ export function AdminCommunications() {
     if (stored) {
       setMessages(JSON.parse(stored));
     } else {
-      setMessages(INITIAL_MESSAGES);
-      localStorage.setItem("udayantu_communications", JSON.stringify(INITIAL_MESSAGES));
+      setMessages([]);
     }
   }, []);
 
@@ -151,6 +102,11 @@ export function AdminCommunications() {
     });
   };
 
+  const smsCount = messages.filter(m => m.channel === "SMS").length;
+  const emailCount = messages.filter(m => m.channel === "Email").length;
+  const whatsappCount = messages.filter(m => m.channel === "WhatsApp").length;
+  const failedCount = messages.filter(m => m.status === "Failed").length;
+
   const getChannelIcon = (channel: string) => {
     switch (channel) {
       case "SMS":
@@ -175,23 +131,23 @@ export function AdminCommunications() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card className="shadow-sm border-slate-100 rounded-2xl bg-white p-4">
           <span className="text-xs font-bold text-slate-400 block">Total SMS Sent</span>
-          <span className="text-2xl font-black text-[#1E3A63] block mt-1">1,248</span>
-          <span className="text-[10px] text-emerald-600 font-bold mt-1 block">99.2% Deliverability</span>
+          <span className="text-2xl font-black text-[#1E3A63] block mt-1">{smsCount}</span>
+          <span className="text-[10px] text-emerald-600 font-bold mt-1 block">Live dispatches</span>
         </Card>
         <Card className="shadow-sm border-slate-100 rounded-2xl bg-white p-4">
           <span className="text-xs font-bold text-slate-400 block">Emails Dispatched</span>
-          <span className="text-2xl font-black text-[#1E3A63] block mt-1">5,830</span>
-          <span className="text-[10px] text-emerald-600 font-bold mt-1 block">98.5% Opened</span>
+          <span className="text-2xl font-black text-[#1E3A63] block mt-1">{emailCount}</span>
+          <span className="text-[10px] text-emerald-600 font-bold mt-1 block">Live dispatches</span>
         </Card>
         <Card className="shadow-sm border-slate-100 rounded-2xl bg-white p-4">
           <span className="text-xs font-bold text-slate-400 block">WhatsApp Messages</span>
-          <span className="text-2xl font-black text-[#1E3A63] block mt-1">840</span>
-          <span className="text-[10px] text-emerald-600 font-bold mt-1 block">97.8% Read Rate</span>
+          <span className="text-2xl font-black text-[#1E3A63] block mt-1">{whatsappCount}</span>
+          <span className="text-[10px] text-emerald-600 font-bold mt-1 block">Live dispatches</span>
         </Card>
         <Card className="shadow-sm border-slate-100 rounded-2xl bg-white p-4">
           <span className="text-xs font-bold text-slate-400 block">Failed/Bounced</span>
-          <span className="text-2xl font-black text-red-600 block mt-1">14</span>
-          <span className="text-[10px] text-red-500 font-bold mt-1 block">Action required</span>
+          <span className="text-2xl font-black text-red-600 block mt-1">{failedCount}</span>
+          <span className="text-[10px] text-slate-400 font-bold mt-1 block">Action required</span>
         </Card>
       </div>
 
