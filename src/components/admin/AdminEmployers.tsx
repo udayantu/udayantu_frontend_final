@@ -7,7 +7,7 @@ import {
   Loader2, Search, TrendingUp, Users, Calendar, Plus, 
   Briefcase, Trophy, UserPlus, Download, Upload, Eye, 
   Edit2, Trash2, MoreVertical, ShieldAlert, CheckCircle, 
-  Mail, Phone, MapPin, Check, SlidersHorizontal, ChevronDown
+  Mail, Phone, MapPin, Check, SlidersHorizontal, ChevronDown, Building2
 } from "lucide-react";
 import {
   Table,
