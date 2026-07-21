@@ -478,7 +478,11 @@ export function AdminEmployers() {
     const d = new Date(nowTime - (4 - i) * 7 * 24 * 60 * 60 * 1000);
     return {
       label: d.toLocaleDateString("en-IN", { day: 'numeric', month: 'short' }),
-      count: employers.filter(e => new Date(e.created_at) <= d).length
+      count: employers.filter(e => {
+        const parsed = e.created_at ? new Date(e.created_at) : new Date();
+        const validDate = isNaN(parsed.getTime()) ? new Date() : parsed;
+        return validDate <= d;
+      }).length
     };
   });
 
