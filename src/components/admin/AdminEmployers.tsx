@@ -875,15 +875,15 @@ export function AdminEmployers() {
                         <div className="flex justify-between items-start">
                           <div className="flex gap-2.5 items-center">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs uppercase ${avatarClass}`}>
-                              {emp.company_name.substring(0, 2)}
+                              {(emp.company_name || "EM").substring(0, 2)}
                             </div>
                             <div>
                               <h4 className="font-extrabold text-sm text-[#1E3A63] leading-tight">{emp.company_name}</h4>
-                              <span className="text-[10px] text-slate-400 font-semibold">{emp.city}, {emp.state}</span>
+                              <span className="text-[10px] text-slate-400 font-semibold">{(emp as any).city || "-"}, {(emp as any).state || "-"}</span>
                             </div>
                           </div>
-                          <Badge className={`text-[9px] px-2 py-0.2 font-bold border rounded-full ${getIndustryBadgeColor(emp.industry || "IT Services")}`}>
-                            {emp.industry}
+                          <Badge className={`text-[9px] px-2 py-0.2 font-bold border rounded-full ${getIndustryBadgeColor((emp as any).industry || "IT Services")}`}>
+                            {(emp as any).industry || "IT Services"}
                           </Badge>
                         </div>
                         
@@ -1262,7 +1262,7 @@ export function AdminEmployers() {
               <div className="bg-white p-4 rounded-xl border border-slate-100 space-y-3.5 text-xs font-semibold text-slate-600">
                 <div className="flex gap-3 items-center">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm uppercase ${getCompanyColor(selectedEmployer.company_name)}`}>
-                    {selectedEmployer.company_name.substring(0, 2)}
+                    {(selectedEmployer.company_name || "EM").substring(0, 2)}
                   </div>
                   <div>
                     <h4 className="font-extrabold text-[#1E3A63] text-sm leading-tight">{selectedEmployer.company_name}</h4>
@@ -1298,7 +1298,7 @@ export function AdminEmployers() {
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Partnership Metadata</span>
                 <div className="space-y-1.5 text-slate-600 font-semibold">
                   <p className="flex justify-between"><span className="text-slate-500">Recruiter Status</span><span className="text-emerald-600 font-bold">{selectedEmployer.status}</span></p>
-                  <p className="flex justify-between"><span className="text-slate-500">Last Dashboard Activity</span><span>{selectedEmployer.last_activity || "2 hours ago"}</span></p>
+                  <p className="flex justify-between"><span className="text-slate-500">Last Dashboard Activity</span><span>{(selectedEmployer as any).last_activity || "2 hours ago"}</span></p>
                   <p className="flex justify-between"><span className="text-slate-500">Verification Date</span><span>{new Date(selectedEmployer.created_at).toLocaleDateString()}</span></p>
                 </div>
               </div>
