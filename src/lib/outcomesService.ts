@@ -573,13 +573,13 @@ class OutcomesServiceImpl {
 
   private getDefaultKPIs(): OutcomesKPIs {
     return {
-      timeToShortlist: 48,
-      interviewAttendance: 92,
-      offerRate: 45.5,
-      joiningRate: 82.3,
-      medianLPA: 4.83,
-      timeToOffer: 12,
-      timeToJoin: 21,
+      timeToShortlist: 0,
+      interviewAttendance: 0,
+      offerRate: 0,
+      joiningRate: 0,
+      medianLPA: 0,
+      timeToOffer: 0,
+      timeToJoin: 0,
     };
   }
 
