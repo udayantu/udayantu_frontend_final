@@ -69,142 +69,6 @@ const parseEmployer = (employer: any): Employer => ({
   created_at: employer.created_at || new Date().toISOString(),
 });
 
-// ---- dummy anchor so replacements below work ----
-const _REMOVED_MOCK_EMPLOYERS = null;
-    contact_name: "Rohan Khanna",
-    email: "rohan.khanna@tcs.com",
-    phone: "9812345678",
-    designation: "Talent Acquisition Head",
-    roles_needed: ["IT Services"],
-    hiring_timeline: "Immediate (Within 30 Days)",
-    cohort_size_estimate: 28,
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    city: "Mumbai",
-    state: "Maharashtra",
-    industry: "IT Services",
-    openings_count: 28,
-    status: "Active",
-    last_activity: "2 hours ago"
-  },
-  {
-    id: "e2",
-    company_name: "Infosys Limited",
-    contact_name: "Neha Iyer",
-    email: "neha.iyer@infosys.com",
-    phone: "9987654321",
-    designation: "Senior HR Manager",
-    roles_needed: ["IT Services"],
-    hiring_timeline: "Next 60 Days",
-    cohort_size_estimate: 35,
-    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-    city: "Bengaluru",
-    state: "Karnataka",
-    industry: "IT Services",
-    openings_count: 35,
-    status: "Active",
-    last_activity: "5 hours ago"
-  },
-  {
-    id: "e3",
-    company_name: "Wipro Limited",
-    contact_name: "Arjun Menon",
-    email: "arjun.menon@wipro.com",
-    phone: "9123456789",
-    designation: "Campus Hiring Lead",
-    roles_needed: ["IT Services"],
-    hiring_timeline: "Immediate",
-    cohort_size_estimate: 22,
-    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-    city: "Bengaluru",
-    state: "Karnataka",
-    industry: "IT Services",
-    openings_count: 22,
-    status: "Active",
-    last_activity: "1 day ago"
-  },
-  {
-    id: "e4",
-    company_name: "HDFC Bank",
-    contact_name: "Sanjana Mehta",
-    email: "sanjana.m@hdfcbank.com",
-    phone: "8812345678",
-    designation: "HR Director",
-    roles_needed: ["Banking"],
-    hiring_timeline: "Immediate",
-    cohort_size_estimate: 50,
-    created_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
-    city: "Mumbai",
-    state: "Maharashtra",
-    industry: "Banking",
-    openings_count: "50+",
-    status: "Active",
-    last_activity: "2 days ago"
-  },
-  {
-    id: "e5",
-    company_name: "Accenture",
-    contact_name: "Vikram Sinha",
-    email: "vikram.sinha@accenture.com",
-    phone: "7765432109",
-    designation: "Recruitment Manager",
-    roles_needed: ["IT Services"],
-    hiring_timeline: "Immediate",
-    cohort_size_estimate: 31,
-    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-    city: "Pune",
-    state: "Maharashtra",
-    industry: "IT Services",
-    openings_count: 31,
-    status: "Active",
-    last_activity: "3 days ago"
-  }
-];
-
-const ITEMS_PER_PAGE = 5;
-
-const parseEmployerNotes = (employer: any): Employer => {
-  let parsed = {
-    city: "Mumbai",
-    state: "Maharashtra",
-    industry: "IT Services",
-    openings_count: 0,
-    status: employer.status || "Pending",
-    last_activity: "Just now"
-  };
-  
-  if (employer.notes) {
-    try {
-      if (employer.notes.trim().startsWith("{")) {
-        const json = JSON.parse(employer.notes);
-        parsed = { ...parsed, ...json };
-      } else {
-        parsed.last_activity = employer.notes;
-      }
-    } catch (e) {
-      // ignore
-    }
-  } else {
-    // Guess defaults based on name to keep table filled
-    const name = employer.company_name?.toLowerCase() || "";
-    if (name.includes("infosys")) {
-      parsed = { city: "Bengaluru", state: "Karnataka", industry: "IT Services", openings_count: 35, status: employer.status || "Active", last_activity: "5 hours ago" };
-    } else if (name.includes("wipro")) {
-      parsed = { city: "Bengaluru", state: "Karnataka", industry: "IT Services", openings_count: 22, status: employer.status || "Active", last_activity: "1 day ago" };
-    } else if (name.includes("hdfc")) {
-      parsed = { city: "Mumbai", state: "Maharashtra", industry: "Banking", openings_count: 50, status: employer.status || "Active", last_activity: "2 days ago" };
-    } else if (name.includes("accenture")) {
-      parsed = { city: "Pune", state: "Maharashtra", industry: "IT Services", openings_count: 31, status: employer.status || "Active", last_activity: "3 days ago" };
-    } else if (name.includes("tata") || name.includes("tcs")) {
-      parsed = { city: "Mumbai", state: "Maharashtra", industry: "IT Services", openings_count: 28, status: employer.status || "Active", last_activity: "2 hours ago" };
-    }
-  }
-
-  return {
-    ...parsed,
-    ...employer
-  };
-};
-
 export function AdminEmployers() {
   const [employers, setEmployers] = useState<Employer[]>([]);
   const [filteredEmployers, setFilteredEmployers] = useState<Employer[]>([]);
@@ -859,7 +723,7 @@ export function AdminEmployers() {
                 <SelectItem value="Pending">Pending</SelectItem>
               </SelectContent>
             </Select>
-          </div>    </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           
@@ -1073,7 +937,7 @@ export function AdminEmployers() {
         <Card className="shadow-sm border-slate-100 rounded-2xl bg-white p-5 space-y-4">
           <div className="flex justify-between items-center pb-2 border-b border-slate-50">
             <span className="text-xs font-extrabold text-[#1E3A63] uppercase tracking-wider">Top Hiring Companies</span>
-            <Button variant="link" onClick={() => setIndustryFilter("all")} className="text-[11px] font-bold text-[#1E56B3] p-0 h-auto">View all</Button>
+            <Button variant="link" onClick={() => setCurrentPage(1)} className="text-[11px] font-bold text-[#1E56B3] p-0 h-auto">View all</Button>
           </div>
           
           <div className="space-y-4">
