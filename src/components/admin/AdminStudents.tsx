@@ -28,12 +28,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
-// Import real student photos from assets
-import amitImg from "@/assets/testimonial-amit.jpg";
-import nehaImg from "@/assets/testimonial-neha.jpg";
-import rajeshImg from "@/assets/testimonial-rajesh.jpg";
-import poojaImg from "@/assets/testimonial-pooja.jpg";
-import blockImg from "@/assets/testimonial-vikram.jpg";
 
 interface Student {
   id: string;
@@ -56,94 +50,6 @@ interface Student {
   whatsapp?: string | null;
 }
 
-const MOCK_STUDENTS: Student[] = [
-  {
-    id: "s1",
-    user_id: "u1",
-    full_name: "Amit Kumar Sharma",
-    email: "amit.sharma@gmail.com",
-    phone: "9876543210",
-    state: "Uttar Pradesh",
-    district: "Varanasi",
-    city: "Babarpur",
-    degree: "B.A. Graduate",
-    year: "2025",
-    desired_role: "Business Development",
-    role_recommendation: "Business Development Specialist",
-    payment_status: "paid",
-    status: "active",
-    created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "s2",
-    user_id: "u2",
-    full_name: "Neha Patel",
-    email: "neha.patel@outlook.com",
-    phone: "8765432109",
-    state: "Madhya Pradesh",
-    district: "Bhopal",
-    city: "Jitpon",
-    degree: "B.Sc. Graduate",
-    year: "2024",
-    desired_role: "Customer Success",
-    role_recommendation: "Customer Support Associate",
-    payment_status: "pending",
-    status: "pending",
-    created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "s3",
-    user_id: "u3",
-    full_name: "Rajesh Gond",
-    email: "rajesh.gond@yahoo.com",
-    phone: "7654321098",
-    state: "Bihar",
-    district: "Patna",
-    city: "Danapur",
-    degree: "B.Com Graduate",
-    year: "2023",
-    desired_role: "Project Management",
-    role_recommendation: "Project Management Assistant",
-    payment_status: "unpaid",
-    status: "pending",
-    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "s4",
-    user_id: "u4",
-    full_name: "Pooja Verma",
-    email: "pooja.v@gmail.com",
-    phone: "9123456780",
-    state: "Rajasthan",
-    district: "Jaipur",
-    city: "Chomu",
-    degree: "B.Tech Student",
-    year: "2026",
-    desired_role: "Business Development",
-    role_recommendation: "Business Development Associate",
-    payment_status: "paid",
-    status: "active",
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "s5",
-    user_id: "u5",
-    full_name: "Vikram Singh",
-    email: "vikram.singh@gmail.com",
-    phone: "8123456789",
-    state: "Haryana",
-    district: "Rohtak",
-    city: "Kalanaur",
-    degree: "12th Pass",
-    year: "2022",
-    desired_role: "Operations Management",
-    role_recommendation: "Operations Executive",
-    payment_status: "paid",
-    status: "placed",
-    created_at: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
-  }
-];
-
 interface AssessmentRecord {
   id: string;
   type: string;
@@ -159,16 +65,7 @@ export function AdminStudents() {
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const getStudentAvatar = (studentId: string) => {
-    const avatars: Record<string, string> = {
-      s1: amitImg,
-      s2: nehaImg,
-      s3: rajeshImg,
-      s4: poojaImg,
-      s5: blockImg,
-    };
-    return avatars[studentId] || null;
-  };
+
   const [searchTerm, setSearchTerm] = useState("");
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -217,19 +114,11 @@ export function AdminStudents() {
         if (data) {
           setMentorsList(data.map((t) => ({ id: t.id, name: t.full_name })));
         } else {
-          setMentorsList([
-            { id: "t1", name: "Dr. Ramesh Prasad" },
-            { id: "t2", name: "Meera Nair" },
-            { id: "t3", name: "Alok Sengupta" },
-          ]);
+          setMentorsList([]);
         }
       }
     } catch (e) {
-      setMentorsList([
-        { id: "t1", name: "Dr. Ramesh Prasad" },
-        { id: "t2", name: "Meera Nair" },
-        { id: "t3", name: "Alok Sengupta" },
-      ]);
+      setMentorsList([]);
     }
   };
 
@@ -293,39 +182,10 @@ export function AdminStudents() {
       });
     } catch (error: unknown) {
       console.warn("Could not load students from live database. Initializing clean/empty state.");
-      const localData = localStorage.getItem("udayantu_students");
-      let allStudents = localData ? JSON.parse(localData) : [];
-      let results = [...allStudents];
-
-      // Apply filters
-      if (searchTerm) {
-        const lower = searchTerm.toLowerCase();
-        results = results.filter(
-          (s) =>
-            s.full_name?.toLowerCase().includes(lower) ||
-            s.email?.toLowerCase().includes(lower) ||
-            s.phone?.toLowerCase().includes(lower)
-        );
-      }
-      if (paymentFilter !== "all") {
-        results = results.filter((s) => s.payment_status === paymentFilter);
-      }
-      if (statusFilter !== "all") {
-        results = results.filter((s) => s.status === statusFilter);
-      }
-
-      setTotalCount(results.length);
-      const sliced = results.slice(from, to + 1);
-      setStudents(sliced);
-      setFilteredStudents(sliced);
-
-      const paid = results.filter((s) => s.payment_status === "paid").length;
-      setStats({
-        total: results.length,
-        paid: paid,
-        thisWeek: results.filter((s) => new Date(s.created_at) >= weekAgo).length,
-        thisMonth: results.filter((s) => new Date(s.created_at) >= monthAgo).length,
-      });
+      setStudents([]);
+      setFilteredStudents([]);
+      setTotalCount(0);
+      setStats({ total: 0, paid: 0, thisWeek: 0, thisMonth: 0 });
     } finally {
       setLoading(false);
     }
@@ -747,7 +607,6 @@ export function AdminStudents() {
           {selectedStudent && (
             <div className="space-y-6">
               {(() => {
-                const avatarSrc = getStudentAvatar(selectedStudent.id);
                 return (
                   <div className="border border-slate-100 rounded-[24px] bg-white p-6 flex flex-col gap-6 shadow-md select-none">
                     {/* Top Row: Demographics & PRI Index */}
@@ -755,17 +614,9 @@ export function AdminStudents() {
                       {/* Left Column: Avatar & Contact Demographics */}
                       <div className="flex gap-4 items-start flex-1 min-w-[280px]">
                         <div className="relative flex-shrink-0">
-                          {avatarSrc ? (
-                            <img 
-                              src={avatarSrc} 
-                              alt={selectedStudent.full_name} 
-                              className="w-20 h-20 rounded-full object-cover border-2 border-slate-200 shadow-sm" 
-                            />
-                          ) : (
-                            <div className="w-20 h-20 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center font-extrabold text-2xl text-slate-400 uppercase overflow-hidden">
-                              {selectedStudent.full_name.charAt(0)}
-                            </div>
-                          )}
+                          <div className="w-20 h-20 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center font-extrabold text-2xl text-slate-400 uppercase overflow-hidden">
+                            {selectedStudent.full_name.charAt(0)}
+                          </div>
                           <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white"></span>
                         </div>
                         

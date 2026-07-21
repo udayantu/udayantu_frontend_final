@@ -19,40 +19,7 @@ export interface ContactSubmission {
 
 const STORAGE_KEY = "udayantu_contact_submissions";
 
-const MOCK_CONTACTS: ContactSubmission[] = [
-  {
-    id: "ct1",
-    full_name: "Amit Kumar Sharma",
-    mobile_number: "9876543210",
-    email: "amit.sharma@gmail.com",
-    role: "student",
-    city: "Varanasi",
-    note: "Interested in enrolling for the Executive Business Development batch starting this month.",
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: "ct2",
-    full_name: "Rohan Khanna",
-    mobile_number: "9812345678",
-    email: "rohan.khanna@tcs.com",
-    role: "employer",
-    city: "Mumbai",
-    note: "Seeking to hire a cohort of 25+ Customer Support interns from Tier-3 cities.",
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: "ct3",
-    full_name: "Dr. Ramesh Prasad",
-    mobile_number: "9988776655",
-    email: "ramesh.prasad@gmail.com",
-    role: "instructor",
-    city: "New Delhi",
-    note: "Applying as a Guest Lecturer for Quantitative Aptitude classes.",
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-  }
-];
-
-// Get all submissions from database with localStorage fallback
+// Get all submissions from database
 export async function getAllContacts(): Promise<ContactSubmission[]> {
   try {
     const { data, error } = await supabase
@@ -61,26 +28,9 @@ export async function getAllContacts(): Promise<ContactSubmission[]> {
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    if (data && data.length > 0) {
-      return data as ContactSubmission[];
-    }
+    return (data as ContactSubmission[]) || [];
   } catch (error) {
-    console.error("Database fetch failed for contacts, checking localStorage fallback:", error);
-  }
-
-  try {
-    if (typeof window === "undefined") {
-      return [];
-    }
-    
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      return MOCK_CONTACTS;
-    }
-    
-    return JSON.parse(stored) as ContactSubmission[];
-  } catch (error) {
-    console.error("Error loading contacts from storage:", error);
+    console.error("Database fetch failed for contacts:", error);
     return [];
   }
 }

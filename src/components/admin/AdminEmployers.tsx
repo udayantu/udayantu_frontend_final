@@ -41,14 +41,8 @@ interface Employer {
   roles_needed: string[];
   hiring_timeline: string;
   cohort_size_estimate: number;
-  created_at: string;
-  // UI fields mapped to notes JSON
-  city?: string;
-  state?: string;
-  industry?: string;
-  openings_count?: number | string;
   status?: "Active" | "Inactive" | "Pending";
-  last_activity?: string;
+  created_at: string;
 }
 
 interface AnalyticsStats {
@@ -59,10 +53,24 @@ interface AnalyticsStats {
   placementsThisMonth: number;
 }
 
-const MOCK_EMPLOYERS: Employer[] = [
-  {
-    id: "e1",
-    company_name: "Tata Consultancy Services",
+const ITEMS_PER_PAGE = 5;
+
+const parseEmployer = (employer: any): Employer => ({
+  id: employer.id,
+  company_name: employer.company_name || "",
+  contact_name: employer.contact_name || "",
+  email: employer.email || "",
+  phone: employer.phone || "",
+  designation: employer.designation || "",
+  roles_needed: employer.roles_needed || [],
+  hiring_timeline: employer.hiring_timeline || "",
+  cohort_size_estimate: employer.cohort_size_estimate || 0,
+  status: employer.status || "Pending",
+  created_at: employer.created_at || new Date().toISOString(),
+});
+
+// ---- dummy anchor so replacements below work ----
+const _REMOVED_MOCK_EMPLOYERS = null;
     contact_name: "Rohan Khanna",
     email: "rohan.khanna@tcs.com",
     phone: "9812345678",
@@ -204,9 +212,7 @@ export function AdminEmployers() {
   
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState("");
-  const [industryFilter, setIndustryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [locationFilter, setLocationFilter] = useState("all");
   
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -231,10 +237,9 @@ export function AdminEmployers() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [designation, setDesignation] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [industry, setIndustry] = useState("IT Services");
-  const [openingsCount, setOpeningsCount] = useState("10");
+  const [rolesNeeded, setRolesNeeded] = useState("");
+  const [hiringTimeline, setHiringTimeline] = useState("Immediate (Within 30 Days)");
+  const [cohortSize, setCohortSize] = useState("10");
   const [status, setStatus] = useState<"Active" | "Inactive" | "Pending">("Active");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -242,7 +247,7 @@ export function AdminEmployers() {
 
   useEffect(() => {
     fetchEmployers();
-  }, [currentPage, searchTerm, industryFilter, statusFilter, locationFilter]);
+  }, [currentPage, searchTerm, statusFilter]);
 
   const fetchEmployers = async () => {
     setLoading(true);
@@ -261,31 +266,30 @@ export function AdminEmployers() {
         query = query.or(`company_name.ilike.%${searchTerm}%,contact_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
       }
 
+      if (statusFilter !== "all") {
+        query = query.eq("status", statusFilter);
+      }
+
       const { data, error, count } = await query;
       if (error) throw error;
 
-      let results = (data || []).map(parseEmployerNotes);
+      const results = (data || []).map(parseEmployer);
 
-      // Client-side filters
-      if (industryFilter !== "all") {
-        results = results.filter(e => e.industry === industryFilter);
-      }
-      if (statusFilter !== "all") {
-        results = results.filter(e => e.status === statusFilter);
-      }
-      if (locationFilter !== "all") {
-        results = results.filter(e => e.state === locationFilter);
-      }
-
-      setTotalCount(results.length);
+      setTotalCount(count || 0);
       setEmployers(results.slice(from, to + 1));
       setFilteredEmployers(results.slice(from, to + 1));
 
-      // Calculate dynamic stats
-      const totalEmp = results.length;
-      const activeEmp = results.filter(e => e.status === "Active").length;
-      const newThisWeekCount = results.filter(e => new Date(e.created_at) >= weekAgo).length;
-      const totalOpenings = results.reduce((acc, e) => acc + (parseInt(String(e.openings_count)) || 0), 0);
+      // Fetch stats separately
+      const [allData, weekData] = await Promise.all([
+        supabase.from("employers").select("cohort_size_estimate, status, created_at"),
+        supabase.from("employers").select("id", { count: "exact", head: true }).gte("created_at", weekAgo.toISOString()),
+      ]);
+
+      const all = allData.data || [];
+      const totalEmp = count || 0;
+      const activeEmp = all.filter(e => e.status === "Active").length;
+      const newThisWeekCount = weekData.count || 0;
+      const totalOpenings = all.reduce((acc, e) => acc + (e.cohort_size_estimate || 0), 0);
 
       setStats({
         total: totalEmp,
@@ -296,49 +300,11 @@ export function AdminEmployers() {
       });
 
     } catch (e) {
-      console.warn("Could not query employers from database. Initializing clean/empty state.");
-      const stored = localStorage.getItem("udayantu_employers");
-      let allEmployers = stored ? JSON.parse(stored) as Employer[] : [];
-      let results = allEmployers.map(parseEmployerNotes);
-
-      if (searchTerm) {
-        const lower = searchTerm.toLowerCase();
-        results = results.filter((e) => 
-          e.company_name?.toLowerCase().includes(lower) ||
-          e.contact_name?.toLowerCase().includes(lower) ||
-          e.email?.toLowerCase().includes(lower) ||
-          e.city?.toLowerCase().includes(lower) ||
-          e.state?.toLowerCase().includes(lower)
-        );
-      }
-
-      if (industryFilter !== "all") {
-        results = results.filter(e => e.industry === industryFilter);
-      }
-      if (statusFilter !== "all") {
-        results = results.filter(e => e.status === statusFilter);
-      }
-      if (locationFilter !== "all") {
-        results = results.filter(e => e.state === locationFilter);
-      }
-
-      setTotalCount(results.length);
-      const sliced = results.slice(from, to + 1);
-      setEmployers(sliced);
-      setFilteredEmployers(sliced);
-
-      const totalEmp = results.length;
-      const activeEmp = results.filter(e => e.status === "Active").length;
-      const newThisWeekCount = results.filter(e => new Date(e.created_at) >= weekAgo).length;
-      const totalOpenings = results.reduce((acc, e) => acc + (parseInt(String(e.openings_count)) || 0), 0);
-
-      setStats({
-        total: totalEmp,
-        active: activeEmp,
-        newThisWeek: newThisWeekCount,
-        openPositions: totalOpenings,
-        placementsThisMonth: Math.round(totalOpenings * 0.15) || 34
-      });
+      console.warn("Could not query employers from database.");
+      setEmployers([]);
+      setFilteredEmployers([]);
+      setTotalCount(0);
+      setStats({ total: 0, active: 0, newThisWeek: 0, openPositions: 0, placementsThisMonth: 0 });
     } finally {
       setLoading(false);
     }
@@ -350,10 +316,9 @@ export function AdminEmployers() {
     setEmail("");
     setPhone("");
     setDesignation("");
-    setCity("");
-    setState("");
-    setIndustry("IT Services");
-    setOpeningsCount("10");
+    setRolesNeeded("");
+    setHiringTimeline("Immediate (Within 30 Days)");
+    setCohortSize("10");
     setStatus("Active");
   };
 
@@ -369,10 +334,9 @@ export function AdminEmployers() {
     setEmail(employer.email || "");
     setPhone(employer.phone || "");
     setDesignation(employer.designation || "");
-    setCity(employer.city || "");
-    setState(employer.state || "");
-    setIndustry(employer.industry || "IT Services");
-    setOpeningsCount(String(employer.openings_count || "10"));
+    setRolesNeeded((employer.roles_needed || []).join(", "));
+    setHiringTimeline(employer.hiring_timeline || "Immediate (Within 30 Days)");
+    setCohortSize(String(employer.cohort_size_estimate || "10"));
     setStatus(employer.status || "Active");
     setIsEditOpen(true);
   };
@@ -393,38 +357,20 @@ export function AdminEmployers() {
     }
 
     try {
-      const newId = "e_" + Date.now();
-      const newEmployer = {
-        id: newId,
+      const rolesArray = rolesNeeded ? rolesNeeded.split(",").map(r => r.trim()).filter(Boolean) : [];
+      const { error } = await supabase.from("employers").insert([{
         company_name: companyName,
         contact_name: contactName,
         email: email,
         phone: phone,
         designation: designation,
-        cohort_size_estimate: parseInt(openingsCount) || 10,
-        hiring_timeline: "Immediate",
-        roles_needed: [industry],
-        created_at: new Date().toISOString(),
+        cohort_size_estimate: parseInt(cohortSize) || 10,
+        hiring_timeline: hiringTimeline,
+        roles_needed: rolesArray,
         status: status,
-        notes: JSON.stringify({
-          city,
-          state,
-          industry,
-          openings_count: openingsCount,
-          status,
-          last_activity: "Just now"
-        })
-      };
+      }]);
 
-      // Push to Supabase
-      const { error } = await supabase.from("employers").insert([newEmployer]);
-      if (error) console.warn("Supabase insert failed, storing locally:", error);
-
-      // Local storage push
-      const stored = localStorage.getItem("udayantu_employers");
-      const allEmployers = stored ? JSON.parse(stored) as any[] : [];
-      allEmployers.unshift(newEmployer);
-      localStorage.setItem("udayantu_employers", JSON.stringify(allEmployers));
+      if (error) throw error;
 
       toast({
         title: "Success",
@@ -434,10 +380,10 @@ export function AdminEmployers() {
       setIsAddOpen(false);
       resetFormFields();
       fetchEmployers();
-    } catch (err) {
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: "Could not add employer record.",
+        description: err?.message || "Could not add employer record.",
         variant: "destructive"
       });
     }
@@ -455,46 +401,20 @@ export function AdminEmployers() {
     }
 
     try {
-      const updatedEmployer = {
-        ...selectedEmployer,
-        company_name: companyName,
-        contact_name: contactName,
-        email: email,
-        phone: phone,
-        designation: designation,
-        cohort_size_estimate: parseInt(openingsCount) || 10,
-        roles_needed: [industry],
-        status: status,
-        notes: JSON.stringify({
-          city,
-          state,
-          industry,
-          openings_count: openingsCount,
-          status,
-          last_activity: "Updated recently"
-        })
-      };
-
-      // Update Supabase
+      const rolesArray = rolesNeeded ? rolesNeeded.split(",").map(r => r.trim()).filter(Boolean) : [];
       const { error } = await supabase.from("employers").update({
         company_name: companyName,
         contact_name: contactName,
         email: email,
         phone: phone,
         designation: designation,
-        cohort_size_estimate: parseInt(openingsCount) || 10,
-        roles_needed: [industry],
+        cohort_size_estimate: parseInt(cohortSize) || 10,
+        hiring_timeline: hiringTimeline,
+        roles_needed: rolesArray,
         status: status,
-        notes: updatedEmployer.notes
       }).eq("id", selectedEmployer.id);
 
-      if (error) console.warn("Supabase update failed:", error);
-
-      // Update Local storage
-      const stored = localStorage.getItem("udayantu_employers");
-      let allEmployers = stored ? JSON.parse(stored) as any[] : [];
-      allEmployers = allEmployers.map(e => e.id === selectedEmployer.id ? updatedEmployer : e);
-      localStorage.setItem("udayantu_employers", JSON.stringify(allEmployers));
+      if (error) throw error;
 
       toast({
         title: "Success",
@@ -505,10 +425,10 @@ export function AdminEmployers() {
       setSelectedEmployer(null);
       resetFormFields();
       fetchEmployers();
-    } catch (err) {
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: "Could not update employer record.",
+        description: err?.message || "Could not update employer record.",
         variant: "destructive"
       });
     }
@@ -519,12 +439,7 @@ export function AdminEmployers() {
 
     try {
       const { error } = await supabase.from("employers").delete().eq("id", id);
-      if (error) console.warn("Supabase delete failed:", error);
-
-      const stored = localStorage.getItem("udayantu_employers");
-      let allEmployers = stored ? JSON.parse(stored) as any[] : [];
-      allEmployers = allEmployers.filter(e => e.id !== id);
-      localStorage.setItem("udayantu_employers", JSON.stringify(allEmployers));
+      if (error) throw error;
 
       toast({
         title: "Deleted",
@@ -532,10 +447,10 @@ export function AdminEmployers() {
       });
 
       fetchEmployers();
-    } catch (err) {
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: "Failed to remove employer.",
+        description: err?.message || "Failed to remove employer.",
         variant: "destructive"
       });
     }
@@ -545,15 +460,15 @@ export function AdminEmployers() {
   const handleExportCSV = () => {
     try {
       const headers = [
-        "Company Name", "City", "State", "Contact Person", 
-        "Contact Email", "Contact Phone", "Designation", 
-        "Industry", "Openings", "Status", "Registered Date"
+        "Company Name", "Contact Person", "Contact Email", "Contact Phone",
+        "Designation", "Roles Needed", "Hiring Timeline", "Cohort Size", "Status", "Registered Date"
       ];
 
       const rows = filteredEmployers.map(e => [
-        e.company_name, e.city || "", e.state || "", e.contact_name,
-        e.email, e.phone, e.designation || "", e.industry || "",
-        e.openings_count || "", e.status || "", new Date(e.created_at).toLocaleDateString()
+        e.company_name, e.contact_name, e.email, e.phone,
+        e.designation || "", (e.roles_needed || []).join(" | "),
+        e.hiring_timeline || "", e.cohort_size_estimate || "",
+        e.status || "", new Date(e.created_at).toLocaleDateString()
       ]);
 
       const csvContent = [
@@ -584,7 +499,7 @@ export function AdminEmployers() {
     }
   };
 
-  // CSV Import handler
+  // CSV Import handler (format: Company Name, Contact, Email, Phone, Designation, Roles, Timeline, Cohort Size, Status)
   const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -596,76 +511,34 @@ export function AdminEmployers() {
         const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
         if (lines.length < 2) throw new Error("CSV has no data rows");
 
-        const newEmployersList: Employer[] = [];
-        const now = new Date().toISOString();
+        const dbList: any[] = [];
 
         for (let i = 1; i < lines.length; i++) {
           const cells = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
-          if (cells.length < 6) continue;
+          if (cells.length < 4) continue;
 
-          const companyName = cells[0];
-          const city = cells[1] || "Mumbai";
-          const state = cells[2] || "Maharashtra";
-          const contactName = cells[3];
-          const email = cells[4];
-          const phone = cells[5];
-          const designation = cells[6] || "HR Partner";
-          const industry = cells[7] || "IT Services";
-          const openings = cells[8] || "15";
-          const status = (cells[9] === "Inactive" || cells[9] === "Pending") ? cells[9] : "Active";
-
-          const parsedId = "e_import_" + Math.random().toString(36).substr(2, 9);
-          newEmployersList.push({
-            id: parsedId,
-            company_name: companyName,
-            contact_name: contactName,
-            email: email,
-            phone: phone,
-            designation: designation,
-            cohort_size_estimate: parseInt(openings) || 10,
-            hiring_timeline: "Immediate",
-            roles_needed: [industry],
-            created_at: now,
-            city,
-            state,
-            industry,
-            openings_count: openings,
-            status,
-            last_activity: "Just imported",
-            notes: JSON.stringify({
-              city, state, industry, openings_count: openings, status, last_activity: "Just imported"
-            })
+          const statusVal = cells[8] || "Active";
+          dbList.push({
+            company_name: cells[0],
+            contact_name: cells[1],
+            email: cells[2],
+            phone: cells[3],
+            designation: cells[4] || "",
+            roles_needed: cells[5] ? cells[5].split("|").map(r => r.trim()) : [],
+            hiring_timeline: cells[6] || "Immediate (Within 30 Days)",
+            cohort_size_estimate: parseInt(cells[7]) || 10,
+            status: ["Active", "Inactive", "Pending"].includes(statusVal) ? statusVal : "Active",
           });
         }
 
-        if (newEmployersList.length === 0) throw new Error("No valid rows could be imported.");
+        if (dbList.length === 0) throw new Error("No valid rows could be imported.");
 
-        // Sync to Supabase
-        const dbList = newEmployersList.map(e => ({
-          company_name: e.company_name,
-          contact_name: e.contact_name,
-          email: e.email,
-          phone: e.phone,
-          designation: e.designation,
-          cohort_size_estimate: e.cohort_size_estimate,
-          hiring_timeline: e.hiring_timeline,
-          roles_needed: e.roles_needed,
-          created_at: e.created_at,
-          status: e.status,
-          notes: e.notes
-        }));
         const { error } = await supabase.from("employers").insert(dbList);
-        if (error) console.warn("Supabase import insert error:", error);
-
-        // Sync to local storage
-        const stored = localStorage.getItem("udayantu_employers");
-        const allEmployers = stored ? JSON.parse(stored) as any[] : [];
-        const merged = [...newEmployersList, ...allEmployers];
-        localStorage.setItem("udayantu_employers", JSON.stringify(merged));
+        if (error) throw error;
 
         toast({
           title: "Import Success",
-          description: `Successfully imported ${newEmployersList.length} employer records.`,
+          description: `Successfully imported ${dbList.length} employer records.`,
         });
 
         fetchEmployers();
@@ -704,33 +577,34 @@ export function AdminEmployers() {
     }
   };
 
-  // Dynamic metrics calculation for bottom row widgets
+  // Dynamic metrics calculation
   const topHirers = [...employers]
-    .filter(e => (e.openings_count || 0) > 0)
-    .sort((a, b) => (b.openings_count || 0) - (a.openings_count || 0))
+    .filter(e => (e.cohort_size_estimate || 0) > 0)
+    .sort((a, b) => (b.cohort_size_estimate || 0) - (a.cohort_size_estimate || 0))
     .slice(0, 3);
 
-  // Industry distribution calculations
-  const totalWithIndustry = employers.length || 1;
-  const industryStats = employers.reduce((acc, e) => {
-    const ind = e.industry || "IT Services";
-    acc[ind] = (acc[ind] || 0) + 1;
+  // Roles distribution calculations
+  const totalWithRoles = employers.length || 1;
+  const rolesStats = employers.reduce((acc, e) => {
+    const roleList = e.roles_needed || [];
+    const role = roleList.length > 0 ? roleList[0] : "Others";
+    acc[role] = (acc[role] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const sortedIndustries = Object.entries(industryStats)
+  const sortedRoles = Object.entries(rolesStats)
     .map(([name, count]) => ({
       name,
       count,
-      percentage: Math.round((count / totalWithIndustry) * 100)
+      percentage: Math.round((count / totalWithRoles) * 100)
     }))
     .sort((a, b) => b.count - a.count);
 
-  const industryColorMap: Record<string, string> = {
-    "IT Services": "#3B82F6",
-    "Banking": "#10B981",
-    "Consulting": "#F59E0B",
-    "Education": "#8B5CF6",
+  const roleColorMap: Record<string, string> = {
+    "Business Development": "#3B82F6",
+    "Customer Success": "#10B981",
+    "Project Management": "#F59E0B",
+    "Operations Management": "#8B5CF6",
     "Others": "#64748B",
   };
 
@@ -754,14 +628,14 @@ export function AdminEmployers() {
   const fillPoints = `20,100 ${points} 280,100`;
 
   let cumulativePercent = 0;
-  const industryCircles = sortedIndustries.slice(0, 4).map((ind, index) => {
-    const color = industryColorMap[ind.name] || "#64748B";
-    const dashArray = `${(ind.percentage / 100) * 376.99} 376.99`;
+  const roleCircles = sortedRoles.slice(0, 4).map((role) => {
+    const color = roleColorMap[role.name] || "#64748B";
+    const dashArray = `${(role.percentage / 100) * 376.99} 376.99`;
     const dashOffset = `-${(cumulativePercent / 100) * 376.99}`;
-    cumulativePercent += ind.percentage;
+    cumulativePercent += role.percentage;
     return {
-      name: ind.name,
-      percentage: ind.percentage,
+      name: role.name,
+      percentage: role.percentage,
       color,
       dashArray,
       dashOffset
@@ -973,22 +847,7 @@ export function AdminEmployers() {
                 className="pl-10 text-xs font-semibold text-slate-600 h-9 border-slate-200 rounded-xl"
               />
             </div>
-            
-            {/* Industry Filter dropdown */}
-            <Select value={industryFilter} onValueChange={(val) => { setIndustryFilter(val); setCurrentPage(1); }}>
-              <SelectTrigger className="h-9 text-xs font-bold text-slate-600 border-slate-200 rounded-xl">
-                <SelectValue placeholder="All Industries" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Industries</SelectItem>
-                <SelectItem value="IT Services">IT Services</SelectItem>
-                <SelectItem value="Banking">Banking</SelectItem>
-                <SelectItem value="Consulting">Consulting</SelectItem>
-                <SelectItem value="Others">Others</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Status Filter dropdown */}
+               {/* Status Filter dropdown */}
             <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
               <SelectTrigger className="h-9 text-xs font-bold text-slate-600 border-slate-200 rounded-xl">
                 <SelectValue placeholder="All Status" />
@@ -1000,22 +859,7 @@ export function AdminEmployers() {
                 <SelectItem value="Pending">Pending</SelectItem>
               </SelectContent>
             </Select>
-
-            {/* Location filter dropdown */}
-            <Select value={locationFilter} onValueChange={(val) => { setLocationFilter(val); setCurrentPage(1); }}>
-              <SelectTrigger className="h-9 text-xs font-bold text-slate-600 border-slate-200 rounded-xl">
-                <SelectValue placeholder="All Locations" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Locations</SelectItem>
-                <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                <SelectItem value="Karnataka">Karnataka</SelectItem>
-                <SelectItem value="Uttar Pradesh">Uttar Pradesh</SelectItem>
-                <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
-                <SelectItem value="Delhi">Delhi</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          </div>    </div>
         </CardHeader>
         <CardContent className="p-0">
           
@@ -1033,10 +877,9 @@ export function AdminEmployers() {
                       <TableHead className="text-xs font-bold text-[#5B759E] uppercase tracking-wider py-4 pl-6">Company</TableHead>
                       <TableHead className="text-xs font-bold text-[#5B759E] uppercase tracking-wider py-4">Contact</TableHead>
                       <TableHead className="text-xs font-bold text-[#5B759E] uppercase tracking-wider py-4">Designation</TableHead>
-                      <TableHead className="text-xs font-bold text-[#5B759E] uppercase tracking-wider py-4">Industry</TableHead>
-                      <TableHead className="text-xs font-bold text-[#5B759E] uppercase tracking-wider py-4 text-center">Openings</TableHead>
+                      <TableHead className="text-xs font-bold text-[#5B759E] uppercase tracking-wider py-4">Roles Needed</TableHead>
+                      <TableHead className="text-xs font-bold text-[#5B759E] uppercase tracking-wider py-4 text-center">Cohort Size</TableHead>
                       <TableHead className="text-xs font-bold text-[#5B759E] uppercase tracking-wider py-4 text-center">Status</TableHead>
-                      <TableHead className="text-xs font-bold text-[#5B759E] uppercase tracking-wider py-4">Last Activity</TableHead>
                       <TableHead className="text-xs font-bold text-[#5B759E] uppercase tracking-wider py-4">Registered</TableHead>
                       <TableHead className="text-xs font-bold text-[#5B759E] uppercase tracking-wider py-4 text-center pr-6">Actions</TableHead>
                     </TableRow>
@@ -1061,7 +904,7 @@ export function AdminEmployers() {
                                 </div>
                                 <div className="space-y-0.5">
                                   <span className="text-xs font-bold text-[#1E3A63] block leading-tight">{emp.company_name}</span>
-                                  <span className="text-xs text-slate-500 font-medium block">{emp.city || "Mumbai"}, {emp.state || "Maharashtra"}</span>
+                                  <span className="text-xs text-slate-500 font-medium block">{emp.hiring_timeline || "Immediate"}</span>
                                 </div>
                               </div>
                             </TableCell>
@@ -1080,16 +923,14 @@ export function AdminEmployers() {
                               <span className="text-sm font-semibold text-slate-700">{emp.designation || "-"}</span>
                             </TableCell>
 
-                            {/* Industry Badge */}
+                            {/* Roles Needed */}
                             <TableCell className="py-4">
-                              <Badge className={`text-xs px-3 py-1 font-semibold border rounded-full hover:bg-inherit shadow-none whitespace-nowrap ${getIndustryBadgeColor(emp.industry || "IT Services")}`}>
-                                {emp.industry || "IT Services"}
-                              </Badge>
+                              <span className="text-xs font-semibold text-slate-700 line-clamp-1">{(emp.roles_needed || []).slice(0, 2).join(", ") || "-"}</span>
                             </TableCell>
 
-                            {/* Openings count */}
+                            {/* Cohort Size */}
                             <TableCell className="py-4 text-center">
-                              <span className="text-sm font-black text-[#1E3A63]">{emp.openings_count || "0"}</span>
+                              <span className="text-sm font-black text-[#1E3A63]">{emp.cohort_size_estimate || "0"}</span>
                             </TableCell>
 
                             {/* Status Bullet */}
@@ -1102,11 +943,6 @@ export function AdminEmployers() {
                                   emp.status === "Active" ? "text-emerald-600" : emp.status === "Inactive" ? "text-slate-400" : "text-amber-600"
                                 }`}>{emp.status || "Active"}</span>
                               </div>
-                            </TableCell>
-
-                            {/* Last Activity */}
-                            <TableCell className="py-4 text-sm font-medium text-slate-600">
-                              {emp.last_activity || "2 hours ago"}
                             </TableCell>
 
                             {/* Registered Date */}
@@ -1321,10 +1157,10 @@ export function AdminEmployers() {
           </div>
         </Card>
 
-        {/* Column 3: Industries Distribution Donut Chart */}
+        {/* Column 3: Roles Distribution Donut Chart */}
         <Card className="shadow-sm border-slate-100 rounded-2xl bg-white p-5 space-y-4">
           <div className="flex justify-between items-center pb-2 border-b border-slate-50">
-            <span className="text-xs font-extrabold text-[#1E3A63] uppercase tracking-wider">Industries Distribution</span>
+            <span className="text-xs font-extrabold text-[#1E3A63] uppercase tracking-wider">Roles Distribution</span>
             <SlidersHorizontal className="w-4 h-4 text-slate-400" />
           </div>
 
@@ -1332,7 +1168,7 @@ export function AdminEmployers() {
             <div className="relative w-28 h-28 flex items-center justify-center flex-shrink-0">
               <svg className="w-full h-full" viewBox="0 0 200 200">
                 <circle cx="100" cy="100" r="60" fill="none" stroke="#F8FAFC" strokeWidth="22" />
-                {industryCircles.map((circle) => (
+                {roleCircles.map((circle) => (
                   <circle
                     key={circle.name}
                     cx="100"
@@ -1354,27 +1190,26 @@ export function AdminEmployers() {
             </div>
 
             <div className="flex-1 space-y-1.5 text-[10px] font-bold text-slate-500 overflow-y-auto max-h-[140px]">
-              {sortedIndustries.slice(0, 4).map((ind) => {
-                const color = industryColorMap[ind.name] || "#64748B";
+              {sortedRoles.slice(0, 4).map((role) => {
+                const color = roleColorMap[role.name] || "#64748B";
                 return (
-                  <div key={ind.name} className="flex justify-between items-center gap-1.5">
+                  <div key={role.name} className="flex justify-between items-center gap-1.5">
                     <span className="flex items-center gap-1 truncate max-w-[80px]">
                       <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }}></span>
-                      {ind.name}
+                      {role.name}
                     </span>
-                    <span className="text-slate-800 font-extrabold">{ind.percentage}%</span>
+                    <span className="text-slate-800 font-extrabold">{role.percentage}%</span>
                   </div>
                 );
               })}
-              {sortedIndustries.length === 0 && (
-                <p className="text-[10px] text-slate-400 text-center py-4">No data</p>
+              {sortedRoles.length === 0 && (
+                <p className="text-[10px] text-slate-400 text-center py-4">No data yet</p>
               )}
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Add Employer Modal Dialog */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="max-w-md p-6">
           <DialogHeader>
@@ -1388,17 +1223,6 @@ export function AdminEmployers() {
             <div className="space-y-1">
               <Label htmlFor="add_comp_name">Company Name</Label>
               <Input id="add_comp_name" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="e.g. Google India" className="h-9" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="add_city">City</Label>
-                <Input id="add_city" value={city} onChange={e => setCity(e.target.value)} placeholder="e.g. Pune" className="h-9" />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="add_state">State</Label>
-                <Input id="add_state" value={state} onChange={e => setState(e.target.value)} placeholder="e.g. Maharashtra" className="h-9" />
-              </div>
             </div>
 
             <div className="space-y-1">
@@ -1422,33 +1246,34 @@ export function AdminEmployers() {
               <Input id="add_desig" value={designation} onChange={e => setDesignation(e.target.value)} placeholder="e.g. Lead Talent Scout" className="h-9" />
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1 col-span-2">
-                <Label htmlFor="add_ind">Industry</Label>
-                <Select value={industry} onValueChange={setIndustry}>
-                  <SelectTrigger id="add_ind" className="h-9 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
+            <div className="space-y-1">
+              <Label htmlFor="add_roles">Roles Needed (comma-separated)</Label>
+              <Input id="add_roles" value={rolesNeeded} onChange={e => setRolesNeeded(e.target.value)} placeholder="e.g. Business Development, Customer Success" className="h-9" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="add_timeline">Hiring Timeline</Label>
+                <Select value={hiringTimeline} onValueChange={setHiringTimeline}>
+                  <SelectTrigger id="add_timeline" className="h-9 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="IT Services">IT Services</SelectItem>
-                    <SelectItem value="Banking">Banking</SelectItem>
-                    <SelectItem value="Consulting">Consulting</SelectItem>
-                    <SelectItem value="Others">Others</SelectItem>
+                    <SelectItem value="Immediate (Within 30 Days)">Immediate (30 Days)</SelectItem>
+                    <SelectItem value="Next 60 Days">Next 60 Days</SelectItem>
+                    <SelectItem value="Next Quarter">Next Quarter</SelectItem>
+                    <SelectItem value="Flexible">Flexible</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label htmlFor="add_open">Openings</Label>
-                <Input id="add_open" type="number" value={openingsCount} onChange={e => setOpeningsCount(e.target.value)} className="h-9" />
+                <Label htmlFor="add_cohort">Cohort Size</Label>
+                <Input id="add_cohort" type="number" value={cohortSize} onChange={e => setCohortSize(e.target.value)} className="h-9" />
               </div>
             </div>
 
             <div className="space-y-1">
               <Label htmlFor="add_status">Partnership Status</Label>
               <Select value={status} onValueChange={(val: any) => setStatus(val)}>
-                <SelectTrigger id="add_status" className="h-9 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger id="add_status" className="h-9 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Active">Active hiring</SelectItem>
                   <SelectItem value="Inactive">Inactive/Paused</SelectItem>
@@ -1481,17 +1306,6 @@ export function AdminEmployers() {
               <Input id="edit_comp_name" value={companyName} onChange={e => setCompanyName(e.target.value)} className="h-9" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="edit_city">City</Label>
-                <Input id="edit_city" value={city} onChange={e => setCity(e.target.value)} className="h-9" />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="edit_state">State</Label>
-                <Input id="edit_state" value={state} onChange={e => setState(e.target.value)} className="h-9" />
-              </div>
-            </div>
-
             <div className="space-y-1">
               <Label htmlFor="edit_contact">Contact Person</Label>
               <Input id="edit_contact" value={contactName} onChange={e => setContactName(e.target.value)} className="h-9" />
@@ -1513,33 +1327,34 @@ export function AdminEmployers() {
               <Input id="edit_desig" value={designation} onChange={e => setDesignation(e.target.value)} className="h-9" />
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1 col-span-2">
-                <Label htmlFor="edit_ind">Industry</Label>
-                <Select value={industry} onValueChange={setIndustry}>
-                  <SelectTrigger id="edit_ind" className="h-9 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
+            <div className="space-y-1">
+              <Label htmlFor="edit_roles">Roles Needed (comma-separated)</Label>
+              <Input id="edit_roles" value={rolesNeeded} onChange={e => setRolesNeeded(e.target.value)} placeholder="e.g. Business Development" className="h-9" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="edit_timeline">Hiring Timeline</Label>
+                <Select value={hiringTimeline} onValueChange={setHiringTimeline}>
+                  <SelectTrigger id="edit_timeline" className="h-9 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="IT Services">IT Services</SelectItem>
-                    <SelectItem value="Banking">Banking</SelectItem>
-                    <SelectItem value="Consulting">Consulting</SelectItem>
-                    <SelectItem value="Others">Others</SelectItem>
+                    <SelectItem value="Immediate (Within 30 Days)">Immediate (30 Days)</SelectItem>
+                    <SelectItem value="Next 60 Days">Next 60 Days</SelectItem>
+                    <SelectItem value="Next Quarter">Next Quarter</SelectItem>
+                    <SelectItem value="Flexible">Flexible</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label htmlFor="edit_open">Openings</Label>
-                <Input id="edit_open" type="text" value={openingsCount} onChange={e => setOpeningsCount(e.target.value)} className="h-9" />
+                <Label htmlFor="edit_cohort">Cohort Size</Label>
+                <Input id="edit_cohort" type="number" value={cohortSize} onChange={e => setCohortSize(e.target.value)} className="h-9" />
               </div>
             </div>
 
             <div className="space-y-1">
               <Label htmlFor="edit_status">Partnership Status</Label>
               <Select value={status} onValueChange={(val: any) => setStatus(val)}>
-                <SelectTrigger id="edit_status" className="h-9 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger id="edit_status" className="h-9 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Active">Active hiring</SelectItem>
                   <SelectItem value="Inactive">Inactive/Paused</SelectItem>
@@ -1578,18 +1393,18 @@ export function AdminEmployers() {
                   </div>
                   <div>
                     <h4 className="font-extrabold text-[#1E3A63] text-sm leading-tight">{selectedEmployer.company_name}</h4>
-                    <p className="text-[10px] text-slate-400">{selectedEmployer.city}, {selectedEmployer.state}</p>
+                    <p className="text-[10px] text-slate-400">{selectedEmployer.hiring_timeline || "N/A"}</p>
                   </div>
                 </div>
 
                 <div className="border-t border-slate-50 pt-3 grid grid-cols-2 gap-3">
                   <div>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Industry</span>
-                    <Badge className="bg-[#EBF3FF] text-[#1E56B3] border border-[#D0E2FF]/60 font-bold hover:bg-inherit shadow-none mt-0.5 text-[10px]">{selectedEmployer.industry}</Badge>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Roles Needed</span>
+                    <Badge className="bg-[#EBF3FF] text-[#1E56B3] border border-[#D0E2FF]/60 font-bold hover:bg-inherit shadow-none mt-0.5 text-[10px]">{(selectedEmployer.roles_needed || []).join(", ") || "N/A"}</Badge>
                   </div>
                   <div>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Active Openings</span>
-                    <span className="text-sm font-black text-[#1E3A63] block mt-0.5">{selectedEmployer.openings_count} positions</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Cohort Size</span>
+                    <span className="text-sm font-black text-[#1E3A63] block mt-0.5">{selectedEmployer.cohort_size_estimate || 0} positions</span>
                   </div>
                 </div>
               </div>

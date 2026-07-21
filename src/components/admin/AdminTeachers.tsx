@@ -43,57 +43,6 @@ export interface Teacher {
 
 const ITEMS_PER_PAGE = 5;
 
-const MOCK_TEACHERS: Teacher[] = [
-  {
-    id: "t1",
-    full_name: "Dr. Ramesh Prasad",
-    email: "ramesh.prasad@udayantu.org",
-    phone: "9876543210",
-    specialization: "Project Management",
-    status: "active",
-    total_hours: 120,
-    pay_rate: 800,
-    bio: "Experienced Project Management instructor teaching Agile, Scrum, and professional planning frameworks.",
-    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: "t2",
-    full_name: "Meera Nair",
-    email: "meera.nair@udayantu.org",
-    phone: "9812345678",
-    specialization: "Customer Success",
-    status: "active",
-    total_hours: 85,
-    pay_rate: 650,
-    bio: "Passionate Customer Success expert coaching student cohorts on onboarding workflows, escalations, and CRM software tools.",
-    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: "t3",
-    full_name: "Alok Sengupta",
-    email: "alok.sengupta@udayantu.org",
-    phone: "9123456789",
-    specialization: "Operations Management",
-    status: "active",
-    total_hours: 42,
-    pay_rate: 500,
-    bio: "Operations leader teaching process mapping, supply chain metrics, and Excel analytics to fresh graduates.",
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: "t4",
-    full_name: "Sunita Deshmukh",
-    email: "sunita.d@udayantu.org",
-    phone: "9988776655",
-    specialization: "Business Development",
-    status: "inactive",
-    total_hours: 60,
-    pay_rate: 750,
-    bio: "Former corporate sales manager teaching lead generation, client presentations, and negotiation techniques.",
-    created_at: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString()
-  }
-];
-
 export function AdminTeachers() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [filteredTeachers, setFilteredTeachers] = useState<Teacher[]>([]);
@@ -159,38 +108,20 @@ export function AdminTeachers() {
         .from("teachers")
         .select("*")
         .order("created_at", { ascending: false });
-
       if (error) throw error;
-
       setTeachers((data as Teacher[]) || []);
       setIsUsingMock(false);
     } catch (error) {
-      console.warn("Could not load teachers from live database. Loading from local storage fallback.");
-      loadMockData();
+      console.warn("Could not load teachers from live database.");
+      setTeachers([]);
+      setIsUsingMock(false);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadMockData = () => {
-    setIsUsingMock(true);
-    const stored = localStorage.getItem("udayantu_teachers");
-    if (stored) {
-      setTeachers(JSON.parse(stored));
-    } else {
-      localStorage.setItem("udayantu_teachers", JSON.stringify(MOCK_TEACHERS));
-      setTeachers(MOCK_TEACHERS);
-    }
-  };
-
   const saveTeachersList = async (updatedList: Teacher[]) => {
     setTeachers(updatedList);
-    if (isUsingMock) {
-      localStorage.setItem("udayantu_teachers", JSON.stringify(updatedList));
-    } else {
-      // Direct supabase sync is automatically handled on next refresh,
-      // but in mock-mode we write directly to localStorage.
-    }
   };
 
   const handleOpenAddDialog = () => {
@@ -218,10 +149,8 @@ export function AdminTeachers() {
     if (!confirm("Are you sure you want to remove this instructor?")) return;
 
     try {
-      if (!isUsingMock) {
-        const { error } = await supabase.from("teachers").delete().eq("id", id);
-        if (error) throw error;
-      }
+      const { error } = await supabase.from("teachers").delete().eq("id", id);
+      if (error) throw error;
 
       const updated = teachers.filter((t) => t.id !== id);
       saveTeachersList(updated);
@@ -231,13 +160,11 @@ export function AdminTeachers() {
         description: "Instructor record has been deleted successfully.",
       });
     } catch (error) {
-      console.warn("Database delete failed, removing locally:", error);
-      const updated = teachers.filter((t) => t.id !== id);
-      saveTeachersList(updated);
-      setIsUsingMock(true);
+      console.error("Database delete failed:", error);
       toast({
-        title: "Instructor Removed (Local)",
-        description: "Instructor record has been deleted locally.",
+        title: "Delete Failed",
+        description: "Failed to remove instructor record.",
+        variant: "destructive",
       });
     }
   };
@@ -245,13 +172,11 @@ export function AdminTeachers() {
   const handleToggleStatus = async (teacher: Teacher) => {
     const nextStatus = teacher.status === "active" ? "inactive" : "active";
     try {
-      if (!isUsingMock) {
-        const { error } = await supabase
-          .from("teachers")
-          .update({ status: nextStatus })
-          .eq("id", teacher.id);
-        if (error) throw error;
-      }
+      const { error } = await supabase
+        .from("teachers")
+        .update({ status: nextStatus })
+        .eq("id", teacher.id);
+      if (error) throw error;
 
       const updated = teachers.map((t) =>
         t.id === teacher.id ? { ...t, status: nextStatus } : t
@@ -263,15 +188,11 @@ export function AdminTeachers() {
         description: `${teacher.full_name} is now ${nextStatus}.`,
       });
     } catch (error) {
-      console.warn("Database status toggle failed, updating locally:", error);
-      const updated = teachers.map((t) =>
-        t.id === teacher.id ? { ...t, status: nextStatus } : t
-      );
-      saveTeachersList(updated);
-      setIsUsingMock(true);
+      console.error("Database status toggle failed:", error);
       toast({
-        title: "Status Updated (Local)",
-        description: `${teacher.full_name} is now ${nextStatus} locally.`,
+        title: "Status Update Failed",
+        description: "Failed to update instructor status.",
+        variant: "destructive",
       });
     }
   };

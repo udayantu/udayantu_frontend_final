@@ -26,7 +26,7 @@ import { DataParityCheck } from "@/components/admin/DataParityCheck";
 import { ReadyCandidates } from "@/components/admin/ReadyCandidates";
 import { UnifiedOutcomesDashboard } from "@/components/admin/UnifiedOutcomesDashboard";
 import { OutcomesParityCheck } from "@/components/admin/OutcomesParityCheck";
-import { ConsentCenter, RefundDashboard, ComplianceTickets, DataRequestPanel } from "@/components/compliance";
+import { RefundDashboard, ComplianceTickets, DataRequestPanel } from "@/components/compliance";
 import { PacketsDashboard } from "@/components/admin/PacketsDashboard";
 import { CSActionsDashboard } from "@/components/admin/CSActionsDashboard";
 import { AdminTeachers } from "@/components/admin/AdminTeachers";
@@ -571,7 +571,6 @@ export default function AdminDashboard() {
                   <TabsTrigger value="tickets">Tickets</TabsTrigger>
                   <TabsTrigger value="refunds">Refunds</TabsTrigger>
                   <TabsTrigger value="data-requests">Data Requests</TabsTrigger>
-                  <TabsTrigger value="settings">Settings</TabsTrigger>
                 </TabsList>
                 <TabsContent value="tickets">
                   <ComplianceTickets
@@ -596,24 +595,6 @@ export default function AdminDashboard() {
                           rbacUser?.role === "customer_success" ? "customer_success" : "admin"}
                     language="en"
                   />
-                </TabsContent>
-                <TabsContent value="settings">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Lock className="w-5 h-5" />
-                        Full Compliance Settings
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground mb-4">
-                        Manage all compliance and GDPR settings from the dedicated compliance panel.
-                      </p>
-                      <Button onClick={() => navigate("/admin/compliance")} data-testid="button-go-compliance">
-                        Go to Compliance Panel
-                      </Button>
-                    </CardContent>
-                  </Card>
                 </TabsContent>
               </Tabs>
             </div>
