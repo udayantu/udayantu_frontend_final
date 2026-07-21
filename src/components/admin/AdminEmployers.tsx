@@ -554,10 +554,6 @@ export function AdminEmployers() {
           <CardContent className="pb-4 px-4 pt-1">
             <div className="text-2xl font-extrabold text-[#1E3A63]">{stats.total}</div>
             <p className="text-xs text-slate-500 font-semibold mt-1">All-time registrations</p>
-            <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 mt-2">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>↑ 12% vs last month</span>
-            </div>
           </CardContent>
         </Card>
 
@@ -572,10 +568,6 @@ export function AdminEmployers() {
           <CardContent className="pb-4 px-4 pt-1">
             <div className="text-2xl font-extrabold text-[#1E3A63]">{stats.active}</div>
             <p className="text-xs text-slate-500 font-semibold mt-1">Currently hiring</p>
-            <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 mt-2">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>↑ 8% vs last month</span>
-            </div>
           </CardContent>
         </Card>
 
@@ -590,10 +582,6 @@ export function AdminEmployers() {
           <CardContent className="pb-4 px-4 pt-1">
             <div className="text-2xl font-extrabold text-[#1E3A63]">{stats.newThisWeek}</div>
             <p className="text-xs text-slate-500 font-semibold mt-1">New registrations</p>
-            <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 mt-2">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>↑ 20% vs last week</span>
-            </div>
           </CardContent>
         </Card>
 
@@ -608,10 +596,6 @@ export function AdminEmployers() {
           <CardContent className="pb-4 px-4 pt-1">
             <div className="text-2xl font-extrabold text-[#1E3A63]">{stats.openPositions}</div>
             <p className="text-xs text-slate-500 font-semibold mt-1">Across all employers</p>
-            <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 mt-2">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>↑ 18% vs last week</span>
-            </div>
           </CardContent>
         </Card>
 
@@ -626,10 +610,6 @@ export function AdminEmployers() {
           <CardContent className="pb-4 px-4 pt-1">
             <div className="text-2xl font-extrabold text-[#1E3A63]">{stats.placementsThisMonth}</div>
             <p className="text-xs text-slate-500 font-semibold mt-1">Through employer network</p>
-            <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 mt-2">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>↑ 24% vs last month</span>
-            </div>
           </CardContent>
         </Card>
       </div>
