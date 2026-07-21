@@ -884,8 +884,8 @@ export function AdminEmployers() {
                             <span className="font-bold text-slate-700">{emp.contact_name}</span>
                           </div>
                           <div>
-                            <span className="text-slate-400 block text-[9px] font-bold uppercase tracking-wider">Openings</span>
-                            <span className="font-extrabold text-[#1E3A63]">{emp.openings_count}</span>
+                            <span className="text-slate-400 block text-[9px] font-bold uppercase tracking-wider">Cohort Size</span>
+                            <span className="font-extrabold text-[#1E3A63]">{emp.cohort_size_estimate || 0}</span>
                           </div>
                         </div>
 
@@ -965,10 +965,10 @@ export function AdminEmployers() {
                         </div>
                         <span className="text-slate-700 truncate max-w-[120px]">{emp.company_name}</span>
                       </div>
-                      <span className="text-[#1E3A63] font-extrabold">{emp.openings_count} Openings</span>
+                      <span className="text-[#1E3A63] font-extrabold">{emp.cohort_size_estimate || 0} Openings</span>
                     </div>
                     <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-[#1E56B3] h-full rounded-full" style={{ width: `${Math.min(100, ((emp.openings_count || 1) / 50) * 100)}%` }}></div>
+                      <div className="bg-[#1E56B3] h-full rounded-full" style={{ width: `${Math.min(100, (((emp.cohort_size_estimate || 0) || 1) / 50) * 100)}%` }}></div>
                     </div>
                   </div>
                 );
