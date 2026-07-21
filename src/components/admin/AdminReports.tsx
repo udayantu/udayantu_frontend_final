@@ -27,49 +27,6 @@ interface CompiledReport {
   file_size: string;
 }
 
-const INITIAL_REPORTS: CompiledReport[] = [
-  {
-    id: "r1",
-    name: "Q2 Placement Outcomes Summary",
-    category: "Placement",
-    format: "PDF",
-    generated_by: "Pradeep K. C.",
-    status: "Ready",
-    created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-    file_size: "2.4 MB"
-  },
-  {
-    id: "r2",
-    name: "Student Assessment Readiness Index",
-    category: "Academics",
-    format: "CSV",
-    generated_by: "Pradeep K. C.",
-    status: "Ready",
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    file_size: "480 KB"
-  },
-  {
-    id: "r3",
-    name: "Mentor Sessions Hour Logs & Invoices",
-    category: "Finance",
-    format: "XLSX",
-    generated_by: "Ramesh Prasad",
-    status: "Ready",
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    file_size: "1.2 MB"
-  },
-  {
-    id: "r4",
-    name: "Waitlisted Employers Engagement Log",
-    category: "Placement",
-    format: "PDF",
-    generated_by: "Neha Iyer",
-    status: "Ready",
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    file_size: "820 KB"
-  }
-];
-
 export function AdminReports() {
   const [reports, setReports] = useState<CompiledReport[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -81,8 +38,7 @@ export function AdminReports() {
     if (stored) {
       setReports(JSON.parse(stored));
     } else {
-      setReports(INITIAL_REPORTS);
-      localStorage.setItem("udayantu_compiled_reports", JSON.stringify(INITIAL_REPORTS));
+      setReports([]);
     }
   }, []);
 
@@ -145,7 +101,7 @@ export function AdminReports() {
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card className="shadow-sm border-slate-100 rounded-2xl bg-white p-4">
           <span className="text-xs font-bold text-slate-400 block">Total Reports Compiled</span>
-          <span className="text-2xl font-black text-[#1E3A63] block mt-1">{reports.length + 12}</span>
+          <span className="text-2xl font-black text-[#1E3A63] block mt-1">{reports.length}</span>
           <span className="text-[10px] text-emerald-600 font-bold mt-1 block">Active caching enabled</span>
         </Card>
         <Card className="shadow-sm border-slate-100 rounded-2xl bg-white p-4">
