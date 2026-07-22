@@ -38,23 +38,18 @@ import {
 import { Loader2, ArrowRight, Globe } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
-// Step 1 Schema
-const step1Schema = z.object({
-  fullName: z.string().min(2, "Full name is required"),
+// Unified Registration Schema - All fields in 1 single step
+const registrationSchema = z.object({
+  fullName: z.string().min(2, "Full name is required").regex(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces"),
   mobile: z.string().length(10, "Mobile number must be 10 digits"),
+  email: z.string().email("Please enter a valid email address"),
   qualification: z.string().min(1, "Please select your qualification"),
   desiredRole: z.string().min(1, "Please select your desired role"),
-});
-
-// Step 2 Schema
-const step2Schema = z.object({
-  email: z.string().email("Please enter a valid email"),
   state: z.string().min(1, "Please select your state"),
   district: z.string().min(1, "Please select your district"),
 });
 
-type Step1Data = z.infer<typeof step1Schema>;
-type Step2Data = z.infer<typeof step2Schema>;
+type RegistrationData = z.infer<typeof registrationSchema>;
 
 interface AuthModalProps {
   open: boolean;
@@ -144,10 +139,10 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
   const [language, setLanguage] = useState<"en" | "hi">("en");
   const t = bilingualText[language];
   
-  // Registration flow states
-  const [regStep, setRegStep] = useState<1 | 2 | 3>(1);
+  // Unified Registration Form State
+  const [regStep, setRegStep] = useState<1 | 2>(1); // 1 = Enter all details, 2 = Verify OTP & finish
   const [otp, setOtp] = useState("");
-  const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
+  const [regData, setRegData] = useState<RegistrationData | null>(null);
   
   // Location states
   const [selectedState, setSelectedState] = useState<string>("");
@@ -163,22 +158,15 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
     setActiveTab(defaultTab);
   }, [defaultTab, open]);
 
-  // Step 1 Form
-  const step1Form = useForm<Step1Data>({
-    resolver: zodResolver(step1Schema),
+  // Unified Registration Form
+  const registrationForm = useForm<RegistrationData>({
+    resolver: zodResolver(registrationSchema),
     defaultValues: {
       fullName: "",
       mobile: "",
+      email: "",
       qualification: "",
       desiredRole: "",
-    },
-  });
-
-  // Step 2 Form
-  const step2Form = useForm<Step2Data>({
-    resolver: zodResolver(step2Schema),
-    defaultValues: {
-      email: "",
       state: "",
       district: "",
     },
@@ -225,13 +213,13 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
     return (window as any).recaptchaVerifier;
   };
 
-  // Step 1: Continue to OTP
-  const handleStep1Submit = async (data: Step1Data) => {
+  // Submit all details at once & send OTP
+  const handleRegistrationSubmit = async (data: RegistrationData) => {
     const exists = await checkUserExists(data.mobile);
     if (exists) {
       toast({
-        title: "You already have an account!",
-        description: "Please use the login tab to sign in.",
+        title: "Account Already Exists!",
+        description: "This mobile number is already registered. Please sign in.",
       });
       setLoginPhone(data.mobile);
       setActiveTab("login");
@@ -240,21 +228,39 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
 
     setIsSubmitting(true);
     try {
+      // Check if email is already in use
+      const { data: existingEmailUser } = await adminSupabase
+        .from("student_registrations")
+        .select("phone")
+        .eq("email", data.email)
+        .neq("phone", data.mobile)
+        .maybeSingle();
+
+      if (existingEmailUser) {
+        toast({
+          title: "Email Already in Use",
+          description: "This email address is already associated with another account.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const phoneNumber = `+91${data.mobile}`;
       const appVerifier = getRecaptchaVerifier();
       
       const confirmResult = await signInWithPhoneNumber(firebaseAuth, phoneNumber, appVerifier);
       setConfirmationResult(confirmResult);
 
-      setStep1Data(data);
-      setRegStep(3);
+      setRegData(data);
+      setRegStep(2);
       toast({
-        title: "OTP Sent",
+        title: "OTP Sent!",
         description: `Verification code sent to ${data.mobile}.`,
       });
     } catch (error: any) {
       toast({
-        title: "Error sending OTP",
+        title: "Error Sending OTP",
         description: error.message || "Failed to dispatch verification code.",
         variant: "destructive",
       });
@@ -263,23 +269,24 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
     }
   };
 
+  // Verify OTP and complete registration directly in database
   const handleVerifyOTP = async () => {
     if (otp.length !== 6) {
       toast({
         title: "Invalid OTP",
-        description: "Please enter the 6-digit OTP",
+        description: "Please enter the 6-digit OTP code",
         variant: "destructive",
       });
       return;
     }
 
-    if (!step1Data) return;
-    if (!confirmationResult) {
+    if (!regData || !confirmationResult) {
       toast({
-        title: "Verification Error",
-        description: "No verification challenge found. Please re-send OTP.",
+        title: "Session Expired",
+        description: "Please fill in your details and try again.",
         variant: "destructive",
       });
+      setRegStep(1);
       return;
     }
 
@@ -290,10 +297,12 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
 
       const mockUser = {
         id: firebaseUser.uid,
-        phone: firebaseUser.phoneNumber || step1Data.mobile,
-        email: `student_${step1Data.mobile}@udayantu.app`,
+        phone: firebaseUser.phoneNumber || regData.mobile,
+        email: regData.email,
         user_metadata: {
-          phone: firebaseUser.phoneNumber || step1Data.mobile,
+          full_name: regData.fullName,
+          phone: firebaseUser.phoneNumber || regData.mobile,
+          email: regData.email,
           verified: true
         }
       };
@@ -301,11 +310,38 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
       localStorage.setItem("udayantu_mock_user", JSON.stringify(mockUser));
       window.dispatchEvent(new Event("storage"));
 
-      setRegStep(2);
+      // Save student registration record directly into database
+      const { error: upsertError } = await adminSupabase
+        .from("student_registrations")
+        .upsert({
+          full_name: regData.fullName,
+          email: regData.email,
+          phone: regData.mobile,
+          qualification: regData.qualification,
+          desired_role: regData.desiredRole,
+          state: regData.state,
+          district: regData.district,
+          location: `${regData.district}, ${regData.state}`,
+          status: 'registered',
+          user_id: firebaseUser.uid
+        }, {
+          onConflict: 'phone'
+        });
+
+      if (upsertError) {
+        console.error("Db upsert error:", upsertError);
+      }
+
       toast({
-        title: "Phone Verified",
-        description: "Please complete your profile to finish registration",
+        title: "Registration Successful!",
+        description: "Welcome to UdaYantu! Redirecting to payment...",
       });
+
+      resetRegistrationForms();
+      onOpenChange(false);
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      window.location.href = "/payment";
     } catch (error: any) {
       toast({
         title: "Verification Failed",
@@ -646,15 +682,14 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
   const handleStateChange = (state: string) => {
     setSelectedState(state);
     setDistricts(indianStatesDistricts[state] || []);
-    step2Form.setValue("district", "");
+    registrationForm.setValue("district", "");
   };
 
   const resetRegistrationForms = () => {
-    step1Form.reset();
-    step2Form.reset();
+    registrationForm.reset();
     setRegStep(1);
     setOtp("");
-    setStep1Data(null);
+    setRegData(null);
     setSelectedState("");
     setDistricts([]);
   };
@@ -775,87 +810,176 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
           {/* REGISTER TAB */}
           <TabsContent value="register" className="mt-6">
             {regStep === 1 && (
-              <form onSubmit={step1Form.handleSubmit(handleStep1Submit)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">{t.fullName}</Label>
-                  <Input
-                    id="fullName"
-                    {...step1Form.register("fullName")}
-                    placeholder={t.enterFullName}
-                    className={step1Form.formState.errors.fullName ? "border-destructive" : ""}
-                    data-testid="input-full-name"
-                  />
-                  {step1Form.formState.errors.fullName && (
-                    <p className="text-sm text-destructive">{step1Form.formState.errors.fullName.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="mobile">{t.mobileNumber}</Label>
-                  <Input
-                    id="mobile"
-                    {...step1Form.register("mobile")}
-                    placeholder={t.enter10Digit}
-                    maxLength={10}
-                    className={step1Form.formState.errors.mobile ? "border-destructive" : ""}
-                    data-testid="input-mobile"
-                  />
-                  {step1Form.formState.errors.mobile && (
-                    <p className="text-sm text-destructive">{step1Form.formState.errors.mobile.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="qualification">{t.qualification}</Label>
-                  <Controller
-                    name="qualification"
-                    control={step1Form.control}
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger className={step1Form.formState.errors.qualification ? "border-destructive" : ""} data-testid="select-qualification">
-                          <SelectValue placeholder={t.selectQualification} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {qualifications.map((qual) => (
-                            <SelectItem key={qual} value={qual}>
-                              {qual}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+              <form onSubmit={registrationForm.handleSubmit(handleRegistrationSubmit)} className="space-y-4">
+                {/* Full Name & Mobile */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">{t.fullName}</Label>
+                    <Input
+                      id="fullName"
+                      {...registrationForm.register("fullName")}
+                      placeholder={t.enterFullName}
+                      className={registrationForm.formState.errors.fullName ? "border-destructive" : ""}
+                      data-testid="input-full-name"
+                    />
+                    {registrationForm.formState.errors.fullName && (
+                      <p className="text-sm text-destructive">{registrationForm.formState.errors.fullName.message}</p>
                     )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="mobile">{t.mobileNumber}</Label>
+                    <Input
+                      id="mobile"
+                      {...registrationForm.register("mobile")}
+                      placeholder={t.enter10Digit}
+                      maxLength={10}
+                      className={registrationForm.formState.errors.mobile ? "border-destructive" : ""}
+                      data-testid="input-mobile"
+                    />
+                    {registrationForm.formState.errors.mobile && (
+                      <p className="text-sm text-destructive">{registrationForm.formState.errors.mobile.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Email Address */}
+                <div className="space-y-2">
+                  <Label htmlFor="email">{t.email}</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    {...registrationForm.register("email")}
+                    placeholder={t.enterEmail}
+                    className={registrationForm.formState.errors.email ? "border-destructive" : ""}
+                    data-testid="input-email"
                   />
-                  {step1Form.formState.errors.qualification && (
-                    <p className="text-sm text-destructive">{step1Form.formState.errors.qualification.message}</p>
+                  {registrationForm.formState.errors.email && (
+                    <p className="text-sm text-destructive">{registrationForm.formState.errors.email.message}</p>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="desiredRole">{t.desiredRole}</Label>
-                  <Controller
-                    name="desiredRole"
-                    control={step1Form.control}
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger className={step1Form.formState.errors.desiredRole ? "border-destructive" : ""} data-testid="select-role">
-                          <SelectValue placeholder={t.selectRole} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Business Development">Business Development</SelectItem>
-                          <SelectItem value="Customer Success">Customer Success</SelectItem>
-                          <SelectItem value="Project Management">Project Management</SelectItem>
-                          <SelectItem value="Operations Management">Operations Management</SelectItem>
-                          <SelectItem value="Product Management">Product Management</SelectItem>
-                          <SelectItem value="Human Resources">Human Resources</SelectItem>
-                          <SelectItem value="Marketing Management">Marketing Management</SelectItem>
-                          <SelectItem value="Customer Support">Customer Support</SelectItem>
-                        </SelectContent>
-                      </Select>
+                {/* Qualification & Role */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="qualification">{t.qualification}</Label>
+                    <Controller
+                      name="qualification"
+                      control={registrationForm.control}
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger className={registrationForm.formState.errors.qualification ? "border-destructive" : ""} data-testid="select-qualification">
+                            <SelectValue placeholder={t.selectQualification} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {qualifications.map((qual) => (
+                              <SelectItem key={qual} value={qual}>
+                                {qual}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {registrationForm.formState.errors.qualification && (
+                      <p className="text-sm text-destructive">{registrationForm.formState.errors.qualification.message}</p>
                     )}
-                  />
-                  {step1Form.formState.errors.desiredRole && (
-                    <p className="text-sm text-destructive">{step1Form.formState.errors.desiredRole.message}</p>
-                  )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="desiredRole">{t.desiredRole}</Label>
+                    <Controller
+                      name="desiredRole"
+                      control={registrationForm.control}
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger className={registrationForm.formState.errors.desiredRole ? "border-destructive" : ""} data-testid="select-role">
+                            <SelectValue placeholder={t.selectRole} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Business Development">Business Development</SelectItem>
+                            <SelectItem value="Customer Success">Customer Success</SelectItem>
+                            <SelectItem value="Project Management">Project Management</SelectItem>
+                            <SelectItem value="Operations Management">Operations Management</SelectItem>
+                            <SelectItem value="Product Management">Product Management</SelectItem>
+                            <SelectItem value="Human Resources">Human Resources</SelectItem>
+                            <SelectItem value="Marketing Management">Marketing Management</SelectItem>
+                            <SelectItem value="Customer Support">Customer Support</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {registrationForm.formState.errors.desiredRole && (
+                      <p className="text-sm text-destructive">{registrationForm.formState.errors.desiredRole.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* State & District */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="state">{t.state}</Label>
+                    <Controller
+                      name="state"
+                      control={registrationForm.control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            handleStateChange(value);
+                          }}
+                          value={field.value}
+                        >
+                          <SelectTrigger className={registrationForm.formState.errors.state ? "border-destructive" : ""} data-testid="select-state">
+                            <SelectValue placeholder={t.selectState} />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[300px]">
+                            {states.map((state) => (
+                              <SelectItem key={state} value={state}>
+                                {state}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {registrationForm.formState.errors.state && (
+                      <p className="text-sm text-destructive">{registrationForm.formState.errors.state.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="district">{t.district}</Label>
+                    <Controller
+                      name="district"
+                      control={registrationForm.control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          disabled={!selectedState}
+                        >
+                          <SelectTrigger className={registrationForm.formState.errors.district ? "border-destructive" : ""} data-testid="select-district">
+                            <SelectValue
+                              placeholder={
+                                selectedState ? t.selectDistrict : t.selectDistrictFirst
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[300px]">
+                            {districts.map((district) => (
+                              <SelectItem key={district} value={district}>
+                                {district}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {registrationForm.formState.errors.district && (
+                      <p className="text-sm text-destructive">{registrationForm.formState.errors.district.message}</p>
+                    )}
+                  </div>
                 </div>
 
                 <Button type="submit" className="w-full" size="lg" disabled={isSubmitting} data-testid="button-register-continue">
@@ -866,7 +990,7 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
                     </>
                   ) : (
                     <>
-                      {t.continue}
+                      {t.sendOtp}
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </>
                   )}
@@ -900,11 +1024,11 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
               </form>
             )}
 
-            {regStep === 3 && (
+            {regStep === 2 && (
               <div className="space-y-4">
                 <div className="space-y-4">
                   <Label htmlFor="otp" className="text-base text-center block" data-testid="label-enter-otp">
-                    {t.enterOtp.replace("{phone}", step1Data?.mobile || "")}
+                    {t.enterOtp.replace("{phone}", regData?.mobile || "")}
                   </Label>
                   <div className="flex justify-center">
                     <InputOTP
@@ -961,106 +1085,6 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
                   </Button>
                 </div>
               </div>
-            )}
-
-            {regStep === 2 && (
-              <form onSubmit={step2Form.handleSubmit(handleStep2Submit)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">{t.email}</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...step2Form.register("email")}
-                    placeholder={t.enterEmail}
-                    className={step2Form.formState.errors.email ? "border-destructive" : ""}
-                    data-testid="input-email"
-                  />
-                  {step2Form.formState.errors.email && (
-                    <p className="text-sm text-destructive">{step2Form.formState.errors.email.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="state">{t.state}</Label>
-                  <Controller
-                    name="state"
-                    control={step2Form.control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          handleStateChange(value);
-                        }}
-                        value={field.value}
-                      >
-                        <SelectTrigger className={step2Form.formState.errors.state ? "border-destructive" : ""} data-testid="select-state">
-                          <SelectValue placeholder={t.selectState} />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[300px]">
-                          {states.map((state) => (
-                            <SelectItem key={state} value={state}>
-                              {state}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {step2Form.formState.errors.state && (
-                    <p className="text-sm text-destructive">{step2Form.formState.errors.state.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="district">{t.district}</Label>
-                  <Controller
-                    name="district"
-                    control={step2Form.control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        disabled={!selectedState}
-                      >
-                        <SelectTrigger className={step2Form.formState.errors.district ? "border-destructive" : ""} data-testid="select-district">
-                          <SelectValue
-                            placeholder={
-                              selectedState ? t.selectDistrict : t.selectDistrictFirst
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[300px]">
-                          {districts.map((district) => (
-                            <SelectItem key={district} value={district}>
-                              {district}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {step2Form.formState.errors.district && (
-                    <p className="text-sm text-destructive">{step2Form.formState.errors.district.message}</p>
-                  )}
-                </div>
-
-                <Button
-                  type="submit" 
-                  className="w-full" 
-                  size="lg"
-                  disabled={isSubmitting}
-                  data-testid="button-complete-registration"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t.completing}
-                    </>
-                  ) : (
-                    t.completeReg
-                  )}
-                </Button>
-              </form>
             )}
           </TabsContent>
 
