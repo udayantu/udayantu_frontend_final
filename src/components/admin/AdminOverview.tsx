@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
+
+const adminSupabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL || "https://ptlgpjixohgmhvrqfmdw.supabase.co",
+  import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0bGdwaml4b2hnbWh2cnFmbWR3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzYxODUyNywiZXhwIjoyMDk5MTk0NTI3fQ.nAb2dflkC_7U-tZ1U9RMfCMM58_Q9YE-cksNGern6yo",
+  { auth: { persistSession: false, autoRefreshToken: false } }
+);
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Users, DollarSign, TrendingUp, GraduationCap, Briefcase, FileCheck, Clock } from "lucide-react";
 import { StatCard } from "./shared/StatCard";
@@ -88,10 +95,10 @@ export function AdminOverview() {
     try {
       // Fetch all data in parallel
       const [studentsRes, paymentsRes, employersRes, assessmentsRes] = await Promise.all([
-        supabase.from("student_registrations").select("payment_status, created_at, desired_role", { count: "exact" }),
-        supabase.from("payments").select("amount, status, created_at", { count: "exact" }),
-        supabase.from("employers").select("id", { count: "exact" }),
-        supabase.from("assessments").select("completed_at", { count: "exact" }),
+        adminSupabase.from("student_registrations").select("payment_status, created_at, desired_role", { count: "exact" }),
+        adminSupabase.from("payments").select("amount, status, created_at", { count: "exact" }),
+        adminSupabase.from("employers").select("id", { count: "exact" }),
+        adminSupabase.from("assessments").select("completed_at", { count: "exact" }),
       ]);
 
       const students = studentsRes.data || [];

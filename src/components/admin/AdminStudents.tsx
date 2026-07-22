@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
+
+const adminSupabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL || "https://ptlgpjixohgmhvrqfmdw.supabase.co",
+  import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0bGdwaml4b2hnbWh2cnFmbWR3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzYxODUyNywiZXhwIjoyMDk5MTk0NTI3fQ.nAb2dflkC_7U-tZ1U9RMfCMM58_Q9YE-cksNGern6yo",
+  { auth: { persistSession: false, autoRefreshToken: false } }
+);
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -130,7 +137,7 @@ export function AdminStudents() {
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     try {
-      let query = supabase
+      let query = adminSupabase
         .from("student_registrations")
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false });
@@ -159,17 +166,17 @@ export function AdminStudents() {
 
       // Fetch stats
       const [weekData, monthData] = await Promise.all([
-        supabase
+        adminSupabase
           .from("student_registrations")
           .select("id", { count: "exact", head: true })
           .gte("created_at", weekAgo.toISOString()),
-        supabase
+        adminSupabase
           .from("student_registrations")
           .select("id", { count: "exact", head: true })
           .gte("created_at", monthAgo.toISOString()),
       ]);
 
-      const { count: paidCountDb } = await supabase
+      const { count: paidCountDb } = await adminSupabase
         .from("student_registrations")
         .select("id", { count: "exact", head: true })
         .eq("payment_status", "paid");
