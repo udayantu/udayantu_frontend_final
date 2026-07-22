@@ -43,9 +43,24 @@ export const UserMenu = () => {
           .maybeSingle();
 
         if (error) throw error;
-        setUserData(data);
+        if (data) {
+          setUserData(data);
+        } else {
+          setUserData({
+            full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+            email: user.email || user.user_metadata?.email || "",
+            phone: user.phone || user.user_metadata?.phone || "",
+            payment_status: "unpaid"
+          });
+        }
       } catch (error) {
         console.error('Error fetching user data:', error);
+        setUserData({
+          full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+          email: user.email || user.user_metadata?.email || "",
+          phone: user.phone || user.user_metadata?.phone || "",
+          payment_status: "unpaid"
+        });
       } finally {
         setLoading(false);
       }
@@ -86,9 +101,16 @@ export const UserMenu = () => {
     );
   };
 
-  if (loading || !userData) {
+  if (loading) {
     return null;
   }
+
+  const currentUserData = userData || {
+    full_name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
+    email: user?.email || user?.user_metadata?.email || "",
+    phone: user?.phone || user?.user_metadata?.phone || "",
+    payment_status: "unpaid"
+  };
 
   return (
     <DropdownMenu>

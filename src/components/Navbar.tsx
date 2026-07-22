@@ -8,7 +8,7 @@ import { AuthModal } from "./AuthModal";
 import { MobileMenu } from "./MobileMenu";
 import { UserMenu } from "./UserMenu";
 import logoImage from "@/assets/udayantu-logo.svg";
-import { LayoutDashboard, Building2, ChevronDown, Home, BookOpen, User } from "lucide-react";
+import { LayoutDashboard, Building2, ChevronDown, Home, BookOpen, User, LogOut } from "lucide-react";
 
 export const Navbar = () => {
   const navigate = useNavigate();
@@ -214,8 +214,18 @@ export const Navbar = () => {
               {/* Auth Buttons & User Menu */}
               {user ? (
                 <>
-                  <div className="hidden lg:block">
+                  <div className="hidden lg:flex items-center gap-3">
                     <UserMenu />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSignOut}
+                      className="border-destructive/30 text-destructive hover:bg-destructive/10 font-medium text-xs gap-1.5 px-3"
+                      data-testid="button-navbar-logout"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      Logout
+                    </Button>
                   </div>
                   <div className="lg:hidden">
                     <MobileMenu navLinks={navLinks} isLinkActive={isLinkActive} />
