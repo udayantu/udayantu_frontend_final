@@ -3,6 +3,13 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
+
+const adminSupabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0bGdwaml4b2hnbWh2cnFmbWR3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzYxODUyNywiZXhwIjoyMDk5MTk0NTI3fQ.nAb2dflkC_7U-tZ1U9RMfCMM58_Q9YE-cksNGern6yo",
+  { auth: { persistSession: false, autoRefreshToken: false } }
+);
 import { useToast } from "@/hooks/use-toast";
 import { indianStatesDistricts, qualifications, getBlocksForDistrict } from "@/data/indianStates";
 import { Button } from "@/components/ui/button";
@@ -106,7 +113,7 @@ export const OnboardingWizard = ({ userId, phoneNumber, onComplete }: Onboarding
     setIsSubmitting(true);
     try {
       // Check for duplicate email
-      const { data: existingEmailUser } = await supabase
+      const { data: existingEmailUser } = await adminSupabase
         .from("student_registrations")
         .select("user_id")
         .eq("email", formData.email)
@@ -123,7 +130,7 @@ export const OnboardingWizard = ({ userId, phoneNumber, onComplete }: Onboarding
         return;
       }
 
-      const { error } = await supabase
+      const { error } = await adminSupabase
         .from("student_registrations")
         .update({
           full_name: formData.fullName,

@@ -187,7 +187,7 @@ export const AuthModal = ({ open, onOpenChange, defaultTab = "register" }: AuthM
   // Check if user exists by phone
   const checkUserExists = async (phone: string) => {
     try {
-      const { data } = await supabase
+      const { data } = await adminSupabase
         .from('student_registrations')
         .select('id')
         .eq('phone', phone)
