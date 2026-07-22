@@ -9,7 +9,7 @@ import { createClient } from "@supabase/supabase-js";
 
 // Service-role client used only for public registration (bypasses RLS)
 const adminSupabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_URL || "https://ptlgpjixohgmhvrqfmdw.supabase.co",
   import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0bGdwaml4b2hnbWh2cnFmbWR3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzYxODUyNywiZXhwIjoyMDk5MTk0NTI3fQ.nAb2dflkC_7U-tZ1U9RMfCMM58_Q9YE-cksNGern6yo",
   { auth: { persistSession: false, autoRefreshToken: false } }
 );
