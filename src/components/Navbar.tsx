@@ -5,10 +5,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { usePaymentStatus } from "@/hooks/usePaymentStatus";
 import { AuthModal } from "./AuthModal";
+import { CareerDiscoveryFlow } from "./student/CareerDiscoveryFlow";
 import { MobileMenu } from "./MobileMenu";
 import { UserMenu } from "./UserMenu";
 import logoImage from "@/assets/udayantu-logo.svg";
-import { LayoutDashboard, Building2, ChevronDown, Home, BookOpen, User, LogOut } from "lucide-react";
+import { LayoutDashboard, Building2, ChevronDown, Home, BookOpen, User, LogOut, Sparkles } from "lucide-react";
 
 export const Navbar = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export const Navbar = () => {
   const { toast } = useToast();
   const { isPaid, loading: paymentLoading } = usePaymentStatus();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
   const [authDefaultTab, setAuthDefaultTab] = useState<"register" | "login">("register");
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("home");
@@ -248,14 +250,12 @@ export const Navbar = () => {
                   <Button
                     variant="secondary"
                     size="sm"
-                    onClick={() => {
-                      setAuthDefaultTab("register");
-                      setIsAuthOpen(true);
-                    }}
-                    className="font-semibold hidden sm:inline-flex shadow-md hover:shadow-lg transition-all duration-200"
-                    data-testid="button-navbar-get-started"
+                    onClick={() => setIsDiscoveryOpen(true)}
+                    className="font-extrabold hidden sm:inline-flex shadow-md hover:shadow-lg transition-all duration-200 gap-1.5 bg-secondary text-secondary-foreground"
+                    data-testid="button-navbar-find-career"
                   >
-                    Get Started
+                    <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                    Find My Best Career
                   </Button>
                   <div className="lg:hidden">
                     <MobileMenu navLinks={navLinks} isLinkActive={isLinkActive} />
@@ -271,8 +271,12 @@ export const Navbar = () => {
           onOpenChange={setIsAuthOpen}
           defaultTab={authDefaultTab}
         />
-      </nav>
 
+        <CareerDiscoveryFlow
+          open={isDiscoveryOpen}
+          onOpenChange={setIsDiscoveryOpen}
+        />
+      </nav>
     </>
   );
 };
