@@ -657,13 +657,7 @@ export function CareerDiscoveryFlow({ open, onOpenChange, initialStep = 'otp' }:
                         className="text-center text-xl font-bold tracking-widest focus-visible:ring-secondary h-12"
                         required
                       />
-                      <button
-                        type="button"
-                        onClick={() => setOtpCode("123456")}
-                        className="text-xs font-semibold text-secondary hover:underline bg-secondary/10 px-3 py-1 rounded-full border border-secondary/20 transition-all inline-flex items-center gap-1 mt-1"
-                      >
-                        ⚡ Click here to auto-fill demo OTP (123456)
-                      </button>
+
                     </div>
 
                     <Button
