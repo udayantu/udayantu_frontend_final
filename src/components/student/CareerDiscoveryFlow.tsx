@@ -244,6 +244,73 @@ export function CareerDiscoveryFlow({ open, onOpenChange, initialStep = 'otp' }:
   const [userId, setUserId] = useState<string>("");
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
+  // Step 4: Assessment Engine State
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
+  const [showMotivationToast, setShowMotivationToast] = useState(false);
+  const [motivationText, setMotivationText] = useState("");
+
+  // Step 5: Result Processing State
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [analysisStageText, setAnalysisStageText] = useState("Analyzing personality & work preferences...");
+
+  // Step 8: Admission Profile & Payment State
+  const [admissionProfile, setAdmissionProfile] = useState({
+    fullName: "",
+    email: "",
+    qualification: "",
+    graduationYear: "",
+    state: "",
+    district: "",
+    preferredLang: "English"
+  });
+
+  // Restore autosaved assessment progress on mount
+  useEffect(() => {
+    const savedProgress = localStorage.getItem("udayantu_assessment_progress");
+    if (savedProgress) {
+      try {
+        const parsed = JSON.parse(savedProgress);
+        if (parsed.selectedAnswers && Object.keys(parsed.selectedAnswers).length > 0) {
+          setSelectedAnswers(parsed.selectedAnswers);
+          setQuestionIndex(parsed.questionIndex || 0);
+        }
+      } catch (e) {
+        console.error("Error restoring assessment progress:", e);
+      }
+    }
+  }, []);
+
+  // Autosave progress on answer selection
+  const handleSelectAnswer = (optionIdx: number) => {
+    const updatedAnswers = { ...selectedAnswers, [questionIndex]: optionIdx };
+    setSelectedAnswers(updatedAnswers);
+
+    localStorage.setItem("udayantu_assessment_progress", JSON.stringify({
+      selectedAnswers: updatedAnswers,
+      questionIndex: questionIndex + 1
+    }));
+
+    const nextIdx = questionIndex + 1;
+    if (nextIdx === 5) {
+      setMotivationText("🌟 Awesome start! You're 33% complete — keep going!");
+      setShowMotivationToast(true);
+      setTimeout(() => setShowMotivationToast(false), 3000);
+    } else if (nextIdx === 10) {
+      setMotivationText("🚀 You're doing great! Just 5 questions left to unlock your top career matches!");
+      setShowMotivationToast(true);
+      setTimeout(() => setShowMotivationToast(false), 3000);
+    }
+
+    setTimeout(() => {
+      if (questionIndex < ASSESSMENT_QUESTIONS.length - 1) {
+        setQuestionIndex(prev => prev + 1);
+      } else {
+        startResultAnalysis(updatedAnswers);
+      }
+    }, 250);
+  };
+
   // Helper for Firebase Invisible Recaptcha
   const getRecaptchaVerifier = () => {
     if (!(window as any).recaptchaVerifier) {
