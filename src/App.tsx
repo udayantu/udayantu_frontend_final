@@ -1,4 +1,11 @@
 import { Component, ErrorInfo, ReactNode, lazy, Suspense, useEffect, useState } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter } from "react-router-dom";
+import { GA4Provider } from "@/components/GA4Provider";
+import AnimatedRoutes from "@/components/AnimatedRoutes";
 
 interface ErrorBoundaryProps {
   children?: ReactNode;
@@ -27,9 +34,9 @@ class GlobalErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySta
       return (
         <div className="min-h-screen flex items-center justify-center p-6 bg-background text-foreground text-center">
           <div className="max-w-md space-y-4">
-            <h2 className="text-2xl font-extrabold text-foreground">App Loading Issue Detected</h2>
+            <h2 className="text-2xl font-extrabold text-foreground">Something went wrong</h2>
             <p className="text-sm text-muted-foreground">
-              {this.state.error?.message || "An unexpected application error occurred."}
+              {this.state.error?.message || "An unexpected error occurred."}
             </p>
             <button
               onClick={() => {
@@ -62,7 +69,7 @@ const queryClient = new QueryClient({
 
 const DeferredCookieConsent = () => {
   const [show, setShow] = useState(false);
-  
+
   useEffect(() => {
     if (window.location.pathname.startsWith('/admin')) {
       return;
@@ -70,9 +77,9 @@ const DeferredCookieConsent = () => {
     const timer = setTimeout(() => setShow(true), 1000);
     return () => clearTimeout(timer);
   }, []);
-  
+
   if (!show || window.location.pathname.startsWith('/admin')) return null;
-  
+
   return (
     <Suspense fallback={null}>
       <CookieConsent />
