@@ -1,15 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { usePaymentStatus } from "@/hooks/usePaymentStatus";
 import { AuthModal } from "./AuthModal";
-import { CareerDiscoveryFlow } from "./student/CareerDiscoveryFlow";
 import { MobileMenu } from "./MobileMenu";
 import { UserMenu } from "./UserMenu";
 import logoImage from "@/assets/udayantu-logo.svg";
 import { LayoutDashboard, Building2, ChevronDown, Home, BookOpen, User, LogOut, Sparkles } from "lucide-react";
+
+const CareerDiscoveryFlow = lazy(() =>
+  import("./student/CareerDiscoveryFlow").then(m => ({ default: m.CareerDiscoveryFlow }))
+);
 
 export const Navbar = () => {
   const navigate = useNavigate();
@@ -280,10 +283,14 @@ export const Navbar = () => {
           defaultTab={authDefaultTab}
         />
 
-        <CareerDiscoveryFlow
-          open={isDiscoveryOpen}
-          onOpenChange={setIsDiscoveryOpen}
-        />
+        {isDiscoveryOpen && (
+          <Suspense fallback={null}>
+            <CareerDiscoveryFlow
+              open={isDiscoveryOpen}
+              onOpenChange={setIsDiscoveryOpen}
+            />
+          </Suspense>
+        )}
       </nav>
     </>
   );
