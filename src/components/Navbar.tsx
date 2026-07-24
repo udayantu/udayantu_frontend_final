@@ -28,8 +28,16 @@ export const Navbar = () => {
       setIsScrolled(window.scrollY > 10);
     };
 
+    const handleOpenDiscovery = () => {
+      setIsDiscoveryOpen(true);
+    };
+
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("open-career-discovery", handleOpenDiscovery);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("open-career-discovery", handleOpenDiscovery);
+    };
   }, []);
 
   useEffect(() => {

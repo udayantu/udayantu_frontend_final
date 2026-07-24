@@ -148,7 +148,7 @@ export const Hero = memo(() => {
               size="xl"
               variant="glow"
               className="text-lg md:text-xl px-8 md:px-12 py-6 md:py-7 h-auto font-extrabold gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-2xl"
-              onClick={() => setIsDiscoveryOpen(true)}
+              onClick={() => window.dispatchEvent(new Event("open-career-discovery"))}
             >
               <Sparkles className="w-6 h-6 text-amber-300 animate-pulse" />
               Find My Best Career
@@ -158,7 +158,7 @@ export const Hero = memo(() => {
               size="xl" 
               variant="ghost" 
               className="bg-white/10 text-white border-2 border-white/40 hover:bg-white/20 hover:border-white/60 backdrop-blur-sm text-base md:text-lg px-8 md:px-10 py-6 md:py-7 h-auto font-semibold"
-              onClick={() => setIsDiscoveryOpen(true)}
+              onClick={() => window.dispatchEvent(new Event("open-career-discovery"))}
             >
               Discover My Career Match
             </Button>
@@ -182,11 +182,6 @@ export const Hero = memo(() => {
         open={isAuthOpen} 
         onOpenChange={setIsAuthOpen}
         defaultTab={authDefaultTab}
-      />
-
-      <CareerDiscoveryFlow
-        open={isDiscoveryOpen}
-        onOpenChange={setIsDiscoveryOpen}
       />
     </section>
   );
