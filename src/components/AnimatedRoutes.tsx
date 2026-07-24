@@ -130,20 +130,7 @@ const RoutesContent = memo(() => {
 });
 
 const AnimatedRoutes = () => {
-  const location = useLocation();
-  const prefersReducedMotion = usePrefersReducedMotion();
-  
-  return (
-    <ReducedMotionContext.Provider value={prefersReducedMotion}>
-      {prefersReducedMotion ? (
-        <RoutesContent />
-      ) : (
-        <AnimatePresence mode="wait">
-          <RoutesContent key={location.pathname} />
-        </AnimatePresence>
-      )}
-    </ReducedMotionContext.Provider>
-  );
+  return <RoutesContent />;
 };
 
 export default AnimatedRoutes;
