@@ -404,14 +404,52 @@ export function CareerDiscoveryFlow({ open, onOpenChange, initialStep = 'otp' }:
 
       setUserId(uid);
 
-      // Save lightweight user session
-      const mockUser = {
-        id: uid,
+      // Check if user is already registered in Supabase student_registrations
+      let existingStudent: any = null;
+      try {
+        const { data } = await adminSupabase
+          .from("student_registrations")
+          .select("*")
+          .eq("phone", mobileNumber)
+          .maybeSingle();
+        existingStudent = data;
+      } catch (dbErr) {
+        console.warn("Notice checking existing student registration:", dbErr);
+      }
+
+      // Save user session
+      const userSession = {
+        id: existingStudent?.user_id || uid,
         phone: mobileNumber,
-        verified: true
+        email: existingStudent?.email || `student_${mobileNumber}@udayantu.app`,
+        user_metadata: {
+          phone: mobileNumber,
+          full_name: existingStudent?.full_name || "",
+          verified: true
+        }
       };
-      localStorage.setItem("udayantu_mock_user", JSON.stringify(mockUser));
+      localStorage.setItem("udayantu_mock_user", JSON.stringify(userSession));
       window.dispatchEvent(new Event("storage"));
+
+      if (existingStudent) {
+        if (existingStudent.payment_status === 'paid') {
+          toast({
+            title: `Welcome back, ${existingStudent.full_name || 'Student'}!`,
+            description: "Redirecting to your student dashboard...",
+          });
+          onOpenChange(false);
+          setTimeout(() => { window.location.href = "/dashboard"; }, 400);
+          return;
+        } else {
+          toast({
+            title: `Welcome back, ${existingStudent.full_name || 'Student'}!`,
+            description: "Redirecting to complete your enrollment...",
+          });
+          onOpenChange(false);
+          setTimeout(() => { window.location.href = "/payment"; }, 400);
+          return;
+        }
+      }
 
       toast({
         title: "Mobile Verified!",
