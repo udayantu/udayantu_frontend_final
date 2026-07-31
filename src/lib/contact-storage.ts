@@ -1,4 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
+
+const adminSupabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL || "https://klitiyxvszecmibaiaop.supabase.co",
+  import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsaXRpeXh2c3plY21pYmFpYW9wIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDg4NTc0MywiZXhwIjoyMTAwNDYxNzQzfQ.MoR48fkUas7Munm9kG21Az81wqw6f2lIw9jwnmjnd6M",
+  { auth: { persistSession: false, autoRefreshToken: false } }
+);
 
 /**
  * Contact Submissions Storage Service
@@ -22,7 +29,7 @@ const STORAGE_KEY = "udayantu_contact_submissions";
 // Get all submissions from database
 export async function getAllContacts(): Promise<ContactSubmission[]> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await adminSupabase
       .from("contact_submissions")
       .select("*")
       .order("created_at", { ascending: false });
@@ -41,7 +48,7 @@ export async function submitContact(
 ): Promise<ContactSubmission | null> {
   try {
     // 1. Save to Supabase database
-    const { data: dbData, error: dbError } = await supabase
+    const { data: dbData, error: dbError } = await adminSupabase
       .from("contact_submissions")
       .insert({
         full_name: submission.full_name,

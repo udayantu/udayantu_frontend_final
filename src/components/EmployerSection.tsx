@@ -10,10 +10,17 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { employerRegistrationSchema, type EmployerRegistrationFormData } from "@/lib/validationSchemas";
 import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmployerWaitlistSuccess } from "./EmployerWaitlistSuccess";
 import { trackEvent } from "@/lib/analytics";
+
+const adminSupabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL || "https://klitiyxvszecmibaiaop.supabase.co",
+  import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsaXRpeXh2c3plY21pYmFpYW9wIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDg4NTc0MywiZXhwIjoyMTAwNDYxNzQzfQ.MoR48fkUas7Munm9kG21Az81wqw6f2lIw9jwnmjnd6M",
+  { auth: { persistSession: false, autoRefreshToken: false } }
+);
 
 const roleOptions = [
   "Business Development",
@@ -66,7 +73,7 @@ export const EmployerSection = () => {
     setIsSubmitting(true);
     try {
       // Save to database
-      const { data: insertResult, error: insertError } = await supabase
+      const { data: insertResult, error: insertError } = await adminSupabase
         .from("employers")
         .insert({
           contact_name: data.contactPerson,

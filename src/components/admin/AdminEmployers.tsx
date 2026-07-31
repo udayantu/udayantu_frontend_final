@@ -1,5 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
+
+const adminSupabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL || "https://klitiyxvszecmibaiaop.supabase.co",
+  import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || import.meta.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsaXRpeXh2c3plY21pYmFpYW9wIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDg4NTc0MywiZXhwIjoyMTAwNDYxNzQzfQ.MoR48fkUas7Munm9kG21Az81wqw6f2lIw9jwnmjnd6M",
+  { auth: { persistSession: false, autoRefreshToken: false } }
+);
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -125,7 +132,7 @@ export function AdminEmployers() {
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     try {
-      let query = supabase
+      let query = adminSupabase
         .from("employers")
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false });
@@ -149,8 +156,8 @@ export function AdminEmployers() {
 
       // Fetch stats separately
       const [allData, weekData] = await Promise.all([
-        supabase.from("employers").select("cohort_size_estimate, status, created_at"),
-        supabase.from("employers").select("id", { count: "exact", head: true }).gte("created_at", weekAgo.toISOString()),
+        adminSupabase.from("employers").select("cohort_size_estimate, status, created_at"),
+        adminSupabase.from("employers").select("id", { count: "exact", head: true }).gte("created_at", weekAgo.toISOString()),
       ]);
 
       const all = allData.data || [];

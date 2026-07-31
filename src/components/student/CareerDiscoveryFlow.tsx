@@ -451,6 +451,20 @@ export function CareerDiscoveryFlow({ open, onOpenChange, initialStep = 'otp' }:
         }
       }
 
+      // Immediately persist lead to Supabase student_registrations table so it shows in Admin Panel
+      try {
+        await adminSupabase.from("student_registrations").upsert({
+          phone: mobileNumber,
+          full_name: `Lead (${mobileNumber})`,
+          email: `student_${mobileNumber}@udayantu.app`,
+          status: 'otp_verified',
+          payment_status: 'unpaid',
+          user_id: uid
+        }, { onConflict: 'phone' });
+      } catch (leadSaveErr) {
+        console.warn("Immediate lead save notice:", leadSaveErr);
+      }
+
       toast({
         title: "Mobile Verified!",
         description: "Welcome to UdaYantu Career Discovery.",
@@ -472,6 +486,18 @@ export function CareerDiscoveryFlow({ open, onOpenChange, initialStep = 'otp' }:
   const startResultAnalysis = (answers: Record<number, number>) => {
     setCurrentStep('analyzing');
     setAnalysisProgress(0);
+
+    // Save assessment results to database
+    try {
+      const topRole = getCalculatedMatches()[0].role;
+      adminSupabase.from("student_registrations").update({
+        desired_role: topRole,
+        role_recommendation: topRole,
+        status: 'assessment_completed'
+      }).eq("phone", mobileNumber).then(() => {});
+    } catch (err) {
+      console.warn("Assessment persistence notice:", err);
+    }
 
     const stages = [
       { progress: 25, text: "🧠 Analyzing personality & work preferences..." },
